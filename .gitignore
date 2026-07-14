@@ -1,0 +1,11 @@
+node_modules/
+dist/
+releases/
+coverage/
+*.log
+
+# 라이선스 서버(server/)의 실제 비밀값. .example 파일만 커밋한다.
+server/.dev.vars
+server/wrangler.toml
+.env
+.env.*

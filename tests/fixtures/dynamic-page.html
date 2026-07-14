@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Cloakli 동적 사이트 테스트 페이지</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Arial, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 18px; }
+  section { margin-bottom: 24px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; }
+  button { margin: 4px 4px 4px 0; padding: 6px 10px; cursor: pointer; }
+  #late-slot, #ajax-slot, #scroll-list { min-height: 20px; }
+  .card { padding: 8px; margin: 4px 0; background: #f2f2f2; border-radius: 4px; }
+  .cloakli-lookalike { padding: 6px; background: #333; color: #fff; }
+  #route-view { padding: 8px; background: #eef; }
+  code { background: #f5f5f5; padding: 1px 4px; }
+</style>
+</head>
+<body>
+<h1>Cloakli 동적 사이트 테스트 페이지 (수동/시각 확인용 fixture)</h1>
+<p>
+  이 페이지는 Cloakli의 자동 테스트(<code>tests/content-integration.test.js</code>)가 검증하는 상황들을
+  실제 브라우저에서 눈으로도 확인해볼 수 있도록 만든 보조 페이지입니다. Cloakli 확장 프로그램을 설치한 뒤
+  이 파일을 열어 아래 버튼들을 눌러보면서 자동 재적용을 눈으로 확인할 수 있습니다.
+  (자동 테스트 자체는 이 HTML을 직접 로딩하지 않고, 같은 상황을 흉내 낸 가짜 DOM 위에서 content.js를 실행합니다.)
+</p>
+
+<section>
+  <h2>1. 늦게 나타나는 요소</h2>
+  <button id="add-late-btn" type="button">3초 뒤 제목 추가</button>
+  <div id="late-slot"></div>
+</section>
+
+<section>
+  <h2>2. 기존 요소 제거 후 새 요소로 교체 (AJAX/클라이언트 렌더링 흉내)</h2>
+  <button id="replace-btn" type="button">교체하기</button>
+  <div id="ajax-slot"><div class="card" id="ajax-content">원본 콘텐츠</div></div>
+</section>
+
+<section>
+  <h2>3. history.pushState로 URL만 변경 (새로고침 없음)</h2>
+  <button id="push-btn" type="button">/detail/1 로 이동 (pushState)</button>
+  <button id="back-btn" type="button">뒤로가기 (popstate)</button>
+  <div id="route-view">현재 화면: 목록</div>
+</section>
+
+<section>
+  <h2>4. hash 변경</h2>
+  <button id="hash-btn" type="button">#section-2 로 이동</button>
+  <div id="hash-target">해시 대상 콘텐츠</div>
+</section>
+
+<section>
+  <h2>5. 무한 스크롤 흉내 (카드 추가)</h2>
+  <button id="add-cards-btn" type="button">카드 5개 추가</button>
+  <div id="scroll-list"></div>
+</section>
+
+<section>
+  <h2>6. 같은 selector를 가진 요소 여러 개</h2>
+  <button id="add-duplicates-btn" type="button">.repeated-item 3개 추가</button>
+  <div id="duplicates-slot"></div>
+</section>
+
+<section>
+  <h2>7. Cloakli UI와 비슷한 이름의 사이트 자체 요소 (제외 대상이 아님을 확인)</h2>
+  <div class="cloakli-lookalike" id="lookalike">
+    이 요소는 class 이름에 "cloakli"가 들어가지만 Cloakli가 만든 것이 아니므로,
+    선택 대상에서 제외되면 안 됩니다.
+  </div>
+</section>
+
+<section>
+  <h2>8. 동일 class를 가진 카드 제목 5개 (일반화 selector 테스트용)</h2>
+  <div id="video-list">
+    <h3 class="video-title">첫 번째 영상 제목</h3>
+    <h3 class="video-title">두 번째 영상 제목</h3>
+    <h3 class="video-title">세 번째 영상 제목</h3>
+    <h3 class="video-title">네 번째 영상 제목</h3>
+    <h3 class="video-title">다섯 번째 영상 제목</h3>
+  </div>
+</section>
+
+<section>
+  <h2>9. 고유 ID 요소</h2>
+  <p id="unique-id-target">이 문단은 고유한 id(unique-id-target)를 가지고 있습니다.</p>
+</section>
+
+<section>
+  <h2>10. 무작위 해시처럼 보이는 class 요소 (일반화 selector에서 제외되어야 함)</h2>
+  <div class="css-1a2b3c4d hashy-x9f2k1">해시형 class만 가진 요소</div>
+</section>
+
+<section>
+  <h2>11. 지나치게 넓은 컨테이너 (일반화 selector로 선택되면 안 됨)</h2>
+  <div id="app-root" style="min-height: 200px; background: #fafafa;">
+    이 컨테이너는 페이지의 거의 전체를 감싸는 최상위 앱 컨테이너를 흉내 냅니다.
+    <div class="card">내부 카드 A</div>
+    <div class="card">내부 카드 B</div>
+  </div>
+</section>
+
+<section>
+  <h2>12. data-testid가 있는 요소</h2>
+  <div data-testid="profile-summary">data-testid="profile-summary"를 가진 요소</div>
+</section>
+
+<section>
+  <h2>13. role과 aria-label이 있는 요소</h2>
+  <div role="note" aria-label="알림 카드">role="note" aria-label="알림 카드"를 가진 요소</div>
+</section>
+
+<section>
+  <h2>14. 쿼리의 ID만 바뀌는 URL 이동 (pathname은 동일)</h2>
+  <button id="push-query-id-btn" type="button">?id=다른값 으로 이동 (pathname 유지)</button>
+  <div id="query-id-view">현재 쿼리 id: (없음)</div>
+</section>
+
+<section>
+  <h2>15. 완전히 다른 pathname으로 이동</h2>
+  <button id="push-other-path-btn" type="button">/other-page 로 이동</button>
+</section>
+
+<script>
+  document.getElementById("add-late-btn").addEventListener("click", function () {
+    setTimeout(function () {
+      var h = document.createElement("h3");
+      h.id = "late-title";
+      h.textContent = "3초 뒤에 나타난 제목";
+      document.getElementById("late-slot").appendChild(h);
+    }, 3000);
+  });
+
+  document.getElementById("replace-btn").addEventListener("click", function () {
+    var slot = document.getElementById("ajax-slot");
+    slot.innerHTML = "";
+    var el = document.createElement("div");
+    el.className = "card";
+    el.id = "ajax-content";
+    el.textContent = "새로 교체된 콘텐츠 (같은 id 재사용)";
+    slot.appendChild(el);
+  });
+
+  document.getElementById("push-btn").addEventListener("click", function () {
+    history.pushState({ page: "detail" }, "", "/detail/1");
+    document.getElementById("route-view").textContent = "현재 화면: 상세 (detail-title 요소 추가)";
+    var t = document.createElement("h2");
+    t.id = "detail-title";
+    t.textContent = "상세 화면 제목";
+    document.getElementById("route-view").appendChild(t);
+  });
+
+  document.getElementById("back-btn").addEventListener("click", function () {
+    history.back();
+  });
+
+  window.addEventListener("popstate", function () {
+    document.getElementById("route-view").textContent = "현재 화면: 목록 (popstate로 복귀)";
+  });
+
+  document.getElementById("hash-btn").addEventListener("click", function () {
+    location.hash = "section-2";
+  });
+
+  document.getElementById("add-cards-btn").addEventListener("click", function () {
+    var list = document.getElementById("scroll-list");
+    for (var i = 0; i < 5; i++) {
+      var card = document.createElement("div");
+      card.className = "card scroll-card";
+      card.textContent = "무한 스크롤 카드 #" + (list.children.length + 1);
+      list.appendChild(card);
+    }
+  });
+
+  document.getElementById("add-duplicates-btn").addEventListener("click", function () {
+    var slot = document.getElementById("duplicates-slot");
+    for (var i = 0; i < 3; i++) {
+      var el = document.createElement("div");
+      el.className = "repeated-item card";
+      el.textContent = "반복 항목 " + (i + 1);
+      slot.appendChild(el);
+    }
+  });
+
+  document.getElementById("push-query-id-btn").addEventListener("click", function () {
+    var randomId = Math.random().toString(36).slice(2, 8);
+    history.pushState({}, "", location.pathname + "?id=" + randomId);
+    document.getElementById("query-id-view").textContent = "현재 쿼리 id: " + randomId + " (pathname은 그대로: " + location.pathname + ")";
+  });
+
+  document.getElementById("push-other-path-btn").addEventListener("click", function () {
+    history.pushState({}, "", "/other-page");
+  });
+</script>
+</body>
+</html>

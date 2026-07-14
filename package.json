@@ -1,0 +1,14 @@
+{
+  "name": "cloakli",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Cloakli Chrome 확장 프로그램 - 자동 테스트 (외부 의존성 없음, Node 내장 test runner만 사용)",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/content-core.test.js tests/entitlement.test.js tests/content-integration.test.js tests/tab-actions.test.js tests/popup.test.js tests/regression.test.js tests/build.test.js",
+    "build:dev": "node scripts/build.js development",
+    "build:prod": "node scripts/build.js production",
+    "validate:prod": "node scripts/validate-release.js",
+    "package:prod": "npm test && npm run build:prod && npm run validate:prod && node scripts/package-release.js",
+    "release:check": "npm test && npm run build:prod && npm run validate:prod"
+  }
+}

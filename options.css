@@ -1,0 +1,307 @@
+/* 설정 페이지 전체 레이아웃 */
+body {
+  margin: 0;
+  padding: 24px 16px 64px;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: #16171b;
+  color: #f2f2f2;
+}
+
+.cloakli-options {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cloakli-options-header h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  color: #4da3ff;
+}
+
+.cloakli-options-desc {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b4b7bf;
+}
+
+/* 전체 규칙/사이트 개수 요약 */
+.cloakli-options-summary {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #8fd0a3;
+}
+
+/* 개발 빌드 안내: 실제 출시 데이터와 혼동하지 않도록 뚜렷하게 구분한다 */
+.cloakli-dev-banner {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #3a1400;
+  background: #ff9142;
+  border-radius: 8px;
+}
+
+/* 현재 요금제 요약 (Free/Pro/Developer Pro) */
+.cloakli-options-plan {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #c7c9cf;
+}
+
+.cloakli-options-plan p {
+  margin: 2px 0;
+}
+
+.cloakli-options-plan.cloakli-plan-pro {
+  color: #4da3ff;
+}
+
+.cloakli-options-plan.cloakli-plan-developer {
+  color: #ffb454;
+}
+
+/* 텍스트 링크 형태의 버튼 (Pro 알아보기) */
+.cloakli-link-btn {
+  background: none;
+  border: none;
+  color: #8fa3c7;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 0;
+  margin-bottom: 12px;
+}
+
+.cloakli-link-btn:focus-visible {
+  outline: 2px solid #4da3ff;
+  outline-offset: 2px;
+}
+
+/* "Pro 알아보기" 안내 영역: 실제 결제 없이 기능 목록만 보여주는 패널 */
+.cloakli-pro-info {
+  max-width: 360px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: #1e1f24;
+  border: 1px solid #2a2b31;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.cloakli-pro-info-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #4da3ff;
+}
+
+.cloakli-pro-info-list {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  line-height: 1.8;
+  color: #e2e4e9;
+}
+
+.cloakli-pro-info-note {
+  margin: 0 0 10px;
+  color: #9a9da5;
+}
+
+/* 사이트 검색 입력창 */
+.cloakli-options-search {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #f2f2f2;
+  background: #1e1f24;
+  border: 1px solid #2a2b31;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.cloakli-options-search:focus-visible {
+  outline: 2px solid #4da3ff;
+  outline-offset: 1px;
+}
+
+/* 삭제 성공/실패 등 짧은 안내 */
+.cloakli-options-message {
+  min-height: 20px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #8fd0a3;
+}
+
+/* 저장된 규칙이 하나도 없을 때의 안내 */
+.cloakli-options-empty {
+  padding: 40px 16px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #9a9da5;
+  background: #1e1f24;
+  border-radius: 10px;
+  border: 1px dashed #35373f;
+}
+
+.cloakli-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 사이트별 카드 */
+.cloakli-site-card {
+  background: #1e1f24;
+  border: 1px solid #2a2b31;
+  border-radius: 10px;
+  padding: 16px;
+  transition: box-shadow 0.3s ease;
+}
+
+.cloakli-site-card-highlight {
+  box-shadow: 0 0 0 2px #4da3ff;
+}
+
+.cloakli-site-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cloakli-site-hostname {
+  margin: 0;
+  font-size: 16px;
+  word-break: break-all;
+}
+
+.cloakli-site-count {
+  font-size: 12px;
+  color: #9a9da5;
+}
+
+/* 일시중지된 사이트 카드에 표시하는 상태 배지 */
+.cloakli-site-paused-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffb454;
+  background: rgba(255, 180, 84, 0.12);
+  border: 1px solid rgba(255, 180, 84, 0.4);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.cloakli-rule-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cloakli-rule-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #16171b;
+  border: 1px solid #2a2b31;
+  border-radius: 8px;
+}
+
+/* selector는 읽기 쉽도록 monospace 글꼴 사용, 길면 줄여서 표시(전체는 title로 확인) */
+.cloakli-rule-selector {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+  color: #d8dce3;
+  word-break: break-all;
+}
+
+.cloakli-rule-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: #9a9da5;
+}
+
+/* 지나치게 광범위해 보이는 selector 규칙 경고. 자동 삭제하지는 않고 사용자에게만 알린다. */
+.cloakli-rule-risk-warning {
+  margin: 0;
+  font-size: 11px;
+  color: #ffb454;
+  white-space: pre-line;
+}
+
+/* 버튼 공통 */
+.cloakli-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.cloakli-btn-secondary {
+  background: #3a3c44;
+  color: #f2f2f2;
+}
+
+.cloakli-btn-secondary:hover {
+  background: #4a4c55;
+}
+
+.cloakli-btn-outline-danger {
+  background: transparent;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+}
+
+.cloakli-btn-outline-danger:hover {
+  background: rgba(255, 107, 107, 0.12);
+}
+
+/* 위험 버튼(전체 초기화): 일반 버튼과 시각적으로 뚜렷하게 구분 */
+.cloakli-btn-danger {
+  background: #d1373f;
+  color: #ffffff;
+}
+
+.cloakli-btn-danger:hover {
+  background: #e8454d;
+}
+
+.cloakli-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cloakli-options-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #2a2b31;
+}
+
+.cloakli-options-footer-desc {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #9a9da5;
+}
+
+@media (max-width: 480px) {
+  .cloakli-site-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

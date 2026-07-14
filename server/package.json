@@ -1,0 +1,10 @@
+{
+  "name": "cloakli-license-server",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Cloakli Pro 라이선스 검증 서버 (Cloudflare Workers + D1). 확장 프로그램 소스와 완전히 분리되어 있으며, 배포에는 Wrangler가 필요합니다.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

@@ -1,0 +1,253 @@
+/* 선택 모드에서 마우스가 올라간 요소에 표시하는 파란 테두리 */
+.cloakli-highlight {
+  outline: 2px solid #4da3ff !important;
+  outline-offset: -2px !important;
+  cursor: crosshair !important;
+}
+
+/* 선택 모드일 때 페이지 전체의 커서를 십자형으로 변경 */
+body.cloakli-selecting,
+body.cloakli-selecting * {
+  cursor: crosshair !important;
+}
+
+/* 화면 고정 선택 모드: 선택 중 웹사이트가 hover로 화면을 바꾸지 못하도록(날짜가 버튼으로
+   교체되거나 공용 미리보기 오버레이가 뜨는 것) 페이지 전체를 덮는 투명 레이어가 모든
+   마우스 이벤트를 대신 받는다. 클릭 좌표는 content.js가 선택 시작 시점 스냅샷/
+   elementsFromPoint로 원래 요소로 되돌리며, 선택 종료 시 이 레이어는 제거되어 사이트의
+   hover/클릭 동작이 그대로 복원된다. 이 레이어 자체는 스크롤 가능한 요소가 아니므로
+   휠 스크롤은 문서 기본 스크롤로 계속 동작한다. */
+.cloakli-selection-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646; /* 안내 배너/범위 선택 UI(2147483647)보다는 아래 */
+  background: transparent;
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+/* 가려진 요소를 감싸는 컨테이너 (img, input 등 자식을 가질 수 없는 요소용 래퍼)
+   원본 요소는 visibility:hidden으로 숨기지 않는다 - 대신 아래 .cloakli-mask-overlay가
+   항상 완전히 불투명한 상태로, 최대 z-index로 덮어 시각적으로만 가린다. hover/focus 등
+   어떤 상태에서도 항상 보이며(:hover 등 조건부 CSS에 의존하지 않는다), pointer-events는
+   원본 요소 자신에는 손대지 않는다(항상 원래 그대로). */
+.cloakli-mask-wrapper,
+.cloakli-masked {
+  position: relative !important;
+  /* 자체 stacking context를 새로 만들어, 자식의 z-index/transform이
+     페이지의 다른 요소와 뒤섞여 가림 레이어 위로 튀어나오지 않게 한다. */
+  isolation: isolate !important;
+  /* transform이 있는 자식(예: position:fixed 자식)이 컨테이너 밖으로
+     삐져나와 보이는 것을 막기 위해 컨테이너를 containing block으로 고정한다. */
+  transform: translateZ(0);
+  overflow: hidden !important;
+}
+
+/* 가림 레이어: 원래 내용을 완전히 덮는 불투명 단색 오버레이.
+   hover/mouseenter/opacity transition 등 어떤 조건에도 의존하지 않고 항상 보인다.
+   pointer-events는 auto다 - none으로 두면 마우스 이벤트(클릭뿐 아니라 hover/mouseover까지)가
+   그대로 아래 원본 요소로 전달되어, 그 사이트 자신의 hover 동작(예: 정지 이미지를 다른
+   미리보기로 바꾸는 것)이 실제로 실행되어 오버레이 너머로 드러날 수 있다. 그래서 오버레이가
+   모든 마우스 이벤트를 직접 흡수하고, 클릭만 content.js(forwardOverlayClick/
+   forwardOverlayAuxClick)가 실제 링크로 대신 전달한다. */
+.cloakli-mask-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* 완전 불투명 단색. rgba나 opacity를 쓰지 않아 원본이 절대 비치지 않는다. */
+  background-color: #1f2937;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto !important;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.cloakli-mask-overlay span {
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #d8d8d8;
+  pointer-events: none;
+}
+
+/* Cloakli의 모든 안내 메시지가 공유하는 단일 toast (fixed, 레이아웃에 영향 없음, 몇 초 후 자동 제거).
+   type별로 왼쪽 강조 선 색상만 다르게 표시해, 텍스트를 읽지 않아도 성격(성공/정보/경고/오류)을
+   구분할 수 있게 한다. */
+.cloakli-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  background: #1e1f24;
+  color: #f2f2f2;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-line;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #4da3ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  max-width: 320px;
+}
+
+.cloakli-toast-success {
+  border-left-color: #4caf7d;
+}
+
+.cloakli-toast-info {
+  border-left-color: #4da3ff;
+}
+
+.cloakli-toast-warning {
+  border-left-color: #ffb454;
+}
+
+.cloakli-toast-error {
+  border-left-color: #ff6b6b;
+}
+
+/* 선택 모드 안내 바 (fixed, 레이아웃에 영향 없음) */
+.cloakli-selection-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483647;
+  background: #1e1f24;
+  color: #f2f2f2;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-line;
+  padding: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* 가림 적용 범위 선택 UI: 요소 클릭 직후 화면 중앙에 표시된다. Shadow DOM 대신
+   배너/토스트와 같은 방식(매우 높은 z-index + 완전 불투명 배경 + Cloakli 전용 class)을
+   사용해, 새 격리 컨텍스트를 도입하는 복잡성 없이 웹사이트 CSS의 영향을 최소화한다. */
+.cloakli-scope-picker {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2147483647;
+  box-sizing: border-box;
+  background: #1e1f24;
+  color: #f2f2f2;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 16px;
+  width: min(360px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  isolation: isolate;
+}
+
+.cloakli-scope-picker * {
+  box-sizing: border-box;
+}
+
+.cloakli-scope-picker-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 인식된 대상(썸네일/제목/채널명/날짜·시간 등)을 사용자에게 보여주는 한 줄 */
+.cloakli-scope-picker-target {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #8fd0a3;
+  text-align: center;
+}
+
+.cloakli-scope-picker-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: #2a2b31;
+  color: #f2f2f2;
+  border: 1px solid #3a3c44;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.cloakli-scope-picker-option:hover:not(:disabled) {
+  background: #35373f;
+}
+
+.cloakli-scope-picker-option:focus-visible {
+  outline: 2px solid #4da3ff;
+  outline-offset: 2px;
+}
+
+.cloakli-scope-picker-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cloakli-scope-picker-option strong {
+  font-size: 13px;
+}
+
+.cloakli-scope-picker-desc {
+  font-size: 11px;
+  color: #b4b7bf;
+  white-space: pre-line;
+}
+
+/* 무료판에서 page/site 범위 버튼을 숨기지 않고 잠금 상태만 명확히 표시하는 배지 */
+.cloakli-scope-picker-pro-badge {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #7a4a00;
+  background: #ffb454;
+  border-radius: 4px;
+}
+
+.cloakli-scope-picker-cancel {
+  margin-top: 4px;
+  align-self: center;
+  background: transparent;
+  color: #9a9da5;
+  border: none;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* 범위 미리보기 outline: 저장 전 임시 표시일 뿐이며, outline은 레이아웃 크기에
+   영향을 주지 않으므로 페이지가 밀리지 않는다. */
+.cloakli-preview-outline {
+  outline: 2px dashed #ffb454 !important;
+  outline-offset: 2px !important;
+}
