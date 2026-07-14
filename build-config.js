@@ -22,16 +22,19 @@
     // 이 값이 정확히 "production"인지도 함께 검사한다.
     mode: "development",
     // 개발자 전용 Pro 테스트 스위치. 출시 빌드에서는 항상 false로 강제된다.
-    developerPro: true,
+    // 실제 라이선스(License Pro) 흐름을 테스트할 때는 반드시 false여야 한다 —
+    // true면 Developer Pro가 우선되어 실키 검증 결과가 화면에 드러나지 않는다.
+    developerPro: false,
     // 디버그 로그 스위치. 출시 빌드에서는 항상 false로 강제된다.
     debug: false,
-    // Cloakli 라이선스 서버(Cloudflare Worker) 주소. 로컬에서 `wrangler dev`를 돌릴 때의
-    // 기본 포트를 가리킨다. 비밀이 아니며(공개 API 엔드포인트 주소일 뿐), 서버 안의
-    // Lemon Squeezy 키/webhook secret과는 무관하다.
-    licenseServerUrl: "http://127.0.0.1:8787",
-    // Lemon Squeezy Checkout URL. 아직 실제 상품을 만들지 않았다면 빈 문자열로 두세요 —
-    // popup은 빈 값이면 새 탭을 열지 않고 "아직 준비되지 않았다"는 안내만 표시합니다.
-    checkoutUrl: "",
+    // Cloakli 라이선스 서버(Cloudflare Worker) 주소 — 실제 배포된 production Worker.
+    // 비밀이 아니며(공개 API 엔드포인트 주소일 뿐), 서버 안의 webhook secret과는 무관하다.
+    // 로컬 서버로 테스트하려면 임시로 "http://127.0.0.1:8787"로 바꾸면 된다(출시 빌드
+    // 검사가 localhost를 차단하므로 되돌리지 않으면 ZIP 생성이 실패한다).
+    licenseServerUrl: "https://cloakli-license.mycloakli.workers.dev",
+    // Lemon Squeezy Checkout URL (실제 Cloakli Pro 상품). 비밀값이 아니며(결제 페이지
+    // 공개 주소일 뿐), popup의 "Pro 구매하기"가 이 주소를 새 탭으로 연다.
+    checkoutUrl: "https://mycloakli.lemonsqueezy.com/checkout/buy/cfc2a207-b317-443f-addc-6a85a91d533e",
   };
 
   if (typeof module !== "undefined" && module.exports) {

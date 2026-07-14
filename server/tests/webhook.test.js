@@ -172,3 +172,40 @@ describe("POST /v1/webhooks/lemonsqueezy", () => {
     assert.ok(!text.includes(TEST_WEBHOOK_SECRET));
   });
 });
+
+// production에서 웹훅이 CORS에 막히지 않는지 확인하는 회귀 테스트.
+// Lemon Squeezy 웹훅은 서버 간 POST라 Origin 헤더가 없다 - production은 Origin 없는
+// 요청을 CORS에서 거부하지만, 웹훅/관리자 endpoint는 자체 인증(서명/bearer)이 방어선이므로
+// CORS 게이트에서 면제되어야 한다. (이 면제가 없으면 배포 후 모든 웹훅이 403이 된다)
+describe("production 환경에서 Origin 없는 서버 간 호출", () => {
+  test("Origin 없는 웹훅(정상 서명)이 production에서 403이 아니라 200으로 처리된다", async () => {
+    const env = createTestEnv({ ENVIRONMENT: "production", LICENSE_PROVIDER: "lemonsqueezy" });
+    const payload = licenseKeyPayload("license_key_created", {});
+    const rawBody = JSON.stringify(payload);
+    const signature = await hmacSha256Hex(TEST_WEBHOOK_SECRET, rawBody);
+    const res = await worker.fetch(
+      makeRequest("/v1/webhooks/lemonsqueezy", { method: "POST", body: rawBody, headers: { "X-Signature": signature }, origin: null }),
+      env
+    );
+    assert.equal(res.status, 200);
+  });
+
+  test("Origin 없는 웹훅(잘못된 서명)은 CORS 403이 아니라 서명 검증 401로 거부된다", async () => {
+    const env = createTestEnv({ ENVIRONMENT: "production", LICENSE_PROVIDER: "lemonsqueezy" });
+    const payload = licenseKeyPayload("license_key_created", {});
+    const res = await worker.fetch(
+      makeRequest("/v1/webhooks/lemonsqueezy", { method: "POST", body: JSON.stringify(payload), headers: { "X-Signature": "bad" }, origin: null }),
+      env
+    );
+    assert.equal(res.status, 401);
+  });
+
+  test("Origin 없는 라이선스 endpoint 호출은 production에서 여전히 403이다 (면제는 웹훅/관리자만)", async () => {
+    const env = createTestEnv({ ENVIRONMENT: "production", LICENSE_PROVIDER: "lemonsqueezy" });
+    const res = await worker.fetch(
+      makeRequest("/v1/license/activate", { method: "POST", body: { licenseKey: "X", installationId: "i", extensionVersion: "1" }, origin: null }),
+      env
+    );
+    assert.equal(res.status, 403);
+  });
+});

@@ -36,6 +36,16 @@ async function routeRequest(request, env) {
   return jsonResponse({ ok: false, error: "not_found" }, 404);
 }
 
+// CORS 차단은 브라우저(확장 프로그램)가 호출하는 라이선스 endpoint에만 적용한다.
+// 웹훅과 관리자 집계는 서버 간 호출이라 Origin 헤더가 없고(production에서 Origin 없는
+// 요청은 CORS가 거부하므로 면제하지 않으면 웹훅이 전부 403이 된다), 각자 자체 인증
+// (웹훅: HMAC 서명 / 관리자: bearer secret)이 실제 방어선이다.
+const CORS_EXEMPT_PATHS = ["/health", "/v1/webhooks/lemonsqueezy", "/v1/admin/license-summary"];
+
+function isCorsExemptPath(pathname) {
+  return CORS_EXEMPT_PATHS.indexOf(pathname) !== -1;
+}
+
 export default {
   async fetch(request, env) {
     const cors = resolveCors(request, env);
@@ -46,7 +56,7 @@ export default {
     }
 
     const url = new URL(request.url);
-    if (!cors.allowed && url.pathname !== "/health") {
+    if (!cors.allowed && !isCorsExemptPath(url.pathname)) {
       return jsonResponse({ ok: false, error: "origin_not_allowed" }, 403);
     }
 

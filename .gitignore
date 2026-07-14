@@ -9,3 +9,9 @@ server/.dev.vars
 server/wrangler.toml
 .env
 .env.*
+
+# wrangler 로컬 상태(로컬 D1/캐시). 커밋하지 않는다.
+.wrangler/
+
+# 로컬 전용 운영 메모(관리자 secret 등). 절대 커밋하지 않는다.
+server/.secrets.local
