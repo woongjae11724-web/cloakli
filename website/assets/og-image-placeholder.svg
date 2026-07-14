@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f1420"/>
+  <rect x="80" y="200" width="240" height="240" rx="52" fill="#1f2937"/>
+  <rect x="122" y="268" width="146" height="38" rx="10" fill="#4da3ff"/>
+  <rect x="122" y="336" width="96" height="38" rx="10" fill="#8fd0a3"/>
+  <text x="380" y="300" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="#eef1f6">Cloakli</text>
+  <text x="380" y="370" font-family="Arial, sans-serif" font-size="30" fill="#9aa3b2">Hide sensitive information before you share your screen.</text>
+</svg>

@@ -1,0 +1,497 @@
+{
+  "extensionName": {
+    "message": "Cloakli"
+  },
+  "extensionDescription": {
+    "message": "Hide sensitive information on websites before sharing your screen."
+  },
+  "commandStartSelection": {
+    "message": "Start selecting an area to hide"
+  },
+  "commandTemporarilyClear": {
+    "message": "Temporarily reveal this page"
+  },
+  "onboardingTitle": {
+    "message": "How to use Cloakli"
+  },
+  "onboardingStep1": {
+    "message": "Click 'Select an area to hide'."
+  },
+  "onboardingStep2": {
+    "message": "Click the part of the page you want to hide."
+  },
+  "onboardingStep3": {
+    "message": "Choose how broadly the mask applies."
+  },
+  "onboardingStep4": {
+    "message": "Start sharing your screen."
+  },
+  "onboardingStart": {
+    "message": "Get started"
+  },
+  "tagline": {
+    "message": "Hide sensitive information before you share your screen."
+  },
+  "selectBtn": {
+    "message": "Select an area to hide"
+  },
+  "pauseBtn": {
+    "message": "Pause masks on this site"
+  },
+  "resumeBtn": {
+    "message": "Resume masks on this site"
+  },
+  "clearBtn": {
+    "message": "Temporarily reveal this page"
+  },
+  "clearBtnNote": {
+    "message": "Saved masks stay saved and re-apply after a refresh or navigation."
+  },
+  "manageBtn": {
+    "message": "Manage saved masks"
+  },
+  "helpBtn": {
+    "message": "View instructions again"
+  },
+  "proInfoBtn": {
+    "message": "About Pro"
+  },
+  "closeBtn": {
+    "message": "Close"
+  },
+  "statusChecking": {
+    "message": "Checking this site…"
+  },
+  "statusUnsupportedPage": {
+    "message": "Cloakli can't run on this page."
+  },
+  "statusTryNormalSite": {
+    "message": "Try again on a regular website."
+  },
+  "currentSiteLabel": {
+    "message": "Current site: $1"
+  },
+  "savedMaskCount": {
+    "message": "Saved masks: $1"
+  },
+  "statePaused": {
+    "message": "Status: paused on this site"
+  },
+  "stateActive": {
+    "message": "Status: masks active"
+  },
+  "selectionStarted": {
+    "message": "Selection mode started. It keeps running after you close this popup."
+  },
+  "selectionPrompt": {
+    "message": "Click the area you want to hide on the page…"
+  },
+  "dispatchFailed": {
+    "message": "Cloakli couldn't start on this page.\nReload the extension, then reopen the web page."
+  },
+  "clearedTemporarilyPopup": {
+    "message": "Masks on this page are temporarily revealed."
+  },
+  "pausedToastPopup": {
+    "message": "Masks paused on this site."
+  },
+  "resumedToastPopup": {
+    "message": "Masks resumed on this site."
+  },
+  "proInfoFeature1": {
+    "message": "Unlimited sites"
+  },
+  "proInfoFeature2": {
+    "message": "Unlimited masks"
+  },
+  "proInfoFeature3": {
+    "message": "Page-type scope"
+  },
+  "proInfoFeature4": {
+    "message": "Site-wide scope"
+  },
+  "proInfoFeature5": {
+    "message": "Future Pro features"
+  },
+  "checkoutNotReady": {
+    "message": "Pro purchase isn't available yet."
+  },
+  "buyProBtn": {
+    "message": "Get Pro"
+  },
+  "enterLicenseBtn": {
+    "message": "Enter license key"
+  },
+  "licenseKeyLabel": {
+    "message": "License key"
+  },
+  "licenseVisibilityToggleAria": {
+    "message": "Show or hide the license key"
+  },
+  "licenseVisibilityShow": {
+    "message": "Show"
+  },
+  "licenseVisibilityHide": {
+    "message": "Hide"
+  },
+  "activateLicenseBtn": {
+    "message": "Activate Pro"
+  },
+  "licenseStatusLine": {
+    "message": "Status:"
+  },
+  "licenseLastCheckedLine": {
+    "message": "Last checked:"
+  },
+  "licenseMaskedKeyLine": {
+    "message": "License:"
+  },
+  "recheckLicenseBtn": {
+    "message": "Re-check license"
+  },
+  "deactivateLicenseBtn": {
+    "message": "Deactivate on this device"
+  },
+  "licenseStatusActive": {
+    "message": "Active"
+  },
+  "licenseStatusUnknown": {
+    "message": "Unknown"
+  },
+  "licenseNeverChecked": {
+    "message": "Never checked"
+  },
+  "licenseChecking": {
+    "message": "Checking…"
+  },
+  "licenseActivated": {
+    "message": "Pro is now active."
+  },
+  "licenseEnterKeyFirst": {
+    "message": "Please enter your license key."
+  },
+  "licenseDeactivateConfirm": {
+    "message": "Deactivate your Pro license on this device?"
+  },
+  "licenseErrMissingKey": {
+    "message": "Please enter your license key."
+  },
+  "licenseErrServerNotConfigured": {
+    "message": "The license server address isn't configured yet."
+  },
+  "licenseErrNetwork": {
+    "message": "Couldn't reach the server. Check your internet connection."
+  },
+  "licenseErrInvalidResponse": {
+    "message": "Couldn't process the server response. Please try again later."
+  },
+  "licenseErrInvalidLicense": {
+    "message": "This license key is not valid."
+  },
+  "licenseErrProductMismatch": {
+    "message": "This license is not for Cloakli Pro."
+  },
+  "licenseErrExpired": {
+    "message": "This license has expired."
+  },
+  "licenseErrDisabled": {
+    "message": "This license has been disabled."
+  },
+  "licenseErrActivationLimit": {
+    "message": "This license has reached its device activation limit."
+  },
+  "licenseErrRateLimited": {
+    "message": "Too many requests. Please try again in a moment."
+  },
+  "licenseErrNoSession": {
+    "message": "No active license on this device."
+  },
+  "licenseErrInvalidSession": {
+    "message": "Your license session has expired. Please activate again."
+  },
+  "licenseErrInstanceDeactivated": {
+    "message": "This device's license has been deactivated."
+  },
+  "licenseErrGeneric": {
+    "message": "Something went wrong with the license. Please try again later."
+  },
+  "planBadgeDeveloper": {
+    "message": "Developer Pro · testing mode"
+  },
+  "planBadgePro": {
+    "message": "Pro · unlimited masks and sites"
+  },
+  "planBadgeFree": {
+    "message": "Free · masks $1/$2 · sites $3/$4"
+  },
+  "optionsPlanDeveloperTitle": {
+    "message": "Current plan: Developer Pro"
+  },
+  "optionsPlanDeveloperNote": {
+    "message": "Unlimited mode for development testing"
+  },
+  "optionsPlanProTitle": {
+    "message": "Current plan: Pro"
+  },
+  "optionsPlanProNote": {
+    "message": "No saving limits"
+  },
+  "optionsPlanFreeTitle": {
+    "message": "Current plan: Free"
+  },
+  "optionsPlanFreeSites": {
+    "message": "Sites in use: $1/$2"
+  },
+  "optionsPlanFreeRules": {
+    "message": "Saved masks: $1/$2"
+  },
+  "bannerFrozenSelection": {
+    "message": "The page is frozen.\nClick an area to hide it.\nPress ESC to cancel."
+  },
+  "bannerTooLarge": {
+    "message": "That area is too large. Please pick a smaller element."
+  },
+  "bannerNoTargetAtPoint": {
+    "message": "Couldn't find an element at that spot. Try clicking somewhere else."
+  },
+  "scopePickerTitle": {
+    "message": "Choose where to apply this mask."
+  },
+  "scopePickerAria": {
+    "message": "Cloakli mask scope selection"
+  },
+  "selectedTargetLabel": {
+    "message": "Selected: $1"
+  },
+  "targetThumbnail": {
+    "message": "Thumbnail"
+  },
+  "targetShortsThumbnail": {
+    "message": "Shorts thumbnail"
+  },
+  "targetTitle": {
+    "message": "Title"
+  },
+  "targetChannelName": {
+    "message": "Channel name"
+  },
+  "targetDateTime": {
+    "message": "Date & time"
+  },
+  "targetText": {
+    "message": "Text"
+  },
+  "targetImage": {
+    "message": "Image"
+  },
+  "targetGeneric": {
+    "message": "Selected area"
+  },
+  "scopeElementLabel": {
+    "message": "This element only"
+  },
+  "scopeElementDesc": {
+    "message": "Hides only the element you selected.\nIt may not re-apply if the page structure changes."
+  },
+  "scopeElementDisabled": {
+    "message": "Couldn't build a stable mask for this element.\nPlease select a different one."
+  },
+  "scopePageLabel": {
+    "message": "Matching elements on this page type"
+  },
+  "scopePageDesc": {
+    "message": "Hides elements with the same role and structure on this page type."
+  },
+  "scopeSiteLabel": {
+    "message": "Matching elements across this site"
+  },
+  "scopeSiteDesc": {
+    "message": "Hides elements with the same role and structure across this site."
+  },
+  "scopeCancel": {
+    "message": "Cancel"
+  },
+  "scopeCancelAria": {
+    "message": "Cancel mask scope selection"
+  },
+  "proBadgeFeature": {
+    "message": "feature"
+  },
+  "safetySelectorMissing": {
+    "message": "Couldn't build a stable mask rule."
+  },
+  "safetySelectorTooLong": {
+    "message": "This structure is too complex to target reliably."
+  },
+  "safetyTooGeneric": {
+    "message": "The selection is too broad, so it wasn't saved."
+  },
+  "safetyNoMatches": {
+    "message": "No matching elements were found."
+  },
+  "safetyTooManyMatches": {
+    "message": "The selection is too broad, so it wasn't saved."
+  },
+  "safetyOriginalNotIncluded": {
+    "message": "The selected element isn't in the result, so this can't be used."
+  },
+  "safetyCoversTooMuch": {
+    "message": "The selection covers too much of the screen, so it wasn't saved."
+  },
+  "safetySelectorInvalid": {
+    "message": "Couldn't calculate the selection."
+  },
+  "safetyMixedRole": {
+    "message": "Different kinds of elements are mixed together, so this can't be used."
+  },
+  "safetyGenericFail": {
+    "message": "This scope can't be used."
+  },
+  "freeLimitRules": {
+    "message": "The Free plan can save up to 3 masks.\nDelete an existing mask or upgrade to Pro."
+  },
+  "freeLimitHostnames": {
+    "message": "The Free plan can save masks on 1 site only.\nDelete existing site masks or upgrade to Pro."
+  },
+  "freeLimitScope": {
+    "message": "Page-type and site-wide masks are Pro features.\nThe Free plan supports 'This element only'."
+  },
+  "freeLimitGeneric": {
+    "message": "Couldn't save because of Free plan limits."
+  },
+  "toastSavedElement": {
+    "message": "This element's mask was saved."
+  },
+  "toastSavedPage": {
+    "message": "Saved $1 matching elements on this page type."
+  },
+  "toastSavedSite": {
+    "message": "Saved matching-element masks across this site."
+  },
+  "toastDuplicate": {
+    "message": "This mask is already saved."
+  },
+  "toastCoveredBySite": {
+    "message": "A site-wide mask already covers this, so it wasn't saved again."
+  },
+  "toastSaveFailed": {
+    "message": "Couldn't save this element.\nThe mask will only last on this page."
+  },
+  "toastTooBroad": {
+    "message": "The selection is too broad, so it wasn't saved.\nPlease select a more specific element."
+  },
+  "toastClearedTemp": {
+    "message": "Masks on this page are temporarily revealed.\nThey re-apply after a refresh or navigation."
+  },
+  "toastRulesResynced": {
+    "message": "A saved mask was deleted, so this page was re-checked."
+  },
+  "toastSitePaused": {
+    "message": "Masks on this site are paused."
+  },
+  "toastSiteResumed": {
+    "message": "Masks on this site are resumed."
+  },
+  "optionsTitle": {
+    "message": "Cloakli — Manage saved masks"
+  },
+  "optionsHeading": {
+    "message": "Manage saved masks"
+  },
+  "optionsSearchPlaceholder": {
+    "message": "Search by site or mask…"
+  },
+  "optionsSummary": {
+    "message": "$1 sites · $2 masks total"
+  },
+  "optionsEmpty": {
+    "message": "No saved masks yet.\n\nOpen Cloakli on a web page and\nclick 'Select an area to hide' to add one."
+  },
+  "optionsNoMatch": {
+    "message": "No masks match your search."
+  },
+  "optionsResetAll": {
+    "message": "Delete all saved masks"
+  },
+  "optionsSiteCount": {
+    "message": "$1 saved masks"
+  },
+  "optionsPausedBadge": {
+    "message": "Paused"
+  },
+  "optionsScopeLabel": {
+    "message": "Scope: $1"
+  },
+  "optionsScopeElement": {
+    "message": "This element only"
+  },
+  "optionsScopePage": {
+    "message": "This page type"
+  },
+  "optionsScopeSite": {
+    "message": "Entire site"
+  },
+  "optionsModeLabel": {
+    "message": "Mask type: $1"
+  },
+  "optionsCreatedLabel": {
+    "message": "Created: $1"
+  },
+  "optionsPagePatternLabel": {
+    "message": "Page scope: $1"
+  },
+  "optionsUnknownDate": {
+    "message": "Unknown"
+  },
+  "optionsRiskWarning": {
+    "message": "This mask was saved with an older format and may apply to multiple elements.\nPlease delete it and create it again."
+  },
+  "optionsDeleteRule": {
+    "message": "Delete"
+  },
+  "optionsDeleteSite": {
+    "message": "Delete all masks for this site"
+  },
+  "optionsConfirmDeleteRule": {
+    "message": "Permanently delete this mask?"
+  },
+  "optionsConfirmDeleteSite": {
+    "message": "Delete all $2 saved masks for $1?"
+  },
+  "optionsConfirmResetAll": {
+    "message": "All saved Cloakli masks will be permanently deleted.\nThis cannot be undone.\n\nContinue?"
+  },
+  "optionsDeletedRule": {
+    "message": "The mask was deleted."
+  },
+  "optionsDeletedSite": {
+    "message": "All masks for $1 were deleted."
+  },
+  "optionsResetDone": {
+    "message": "All saved masks were deleted."
+  },
+  "optionsRuleNotFound": {
+    "message": "Couldn't find that mask to delete. Refreshing the list."
+  },
+  "optionsResetFailed": {
+    "message": "Couldn't reset. Please try again."
+  },
+  "optionsIntro": {
+    "message": "Review and delete saved masks per site. The actual text, names, emails, and images on web pages are never stored - only the CSS selectors needed to find elements again."
+  },
+  "optionsSearchAria": {
+    "message": "Search saved sites"
+  },
+  "optionsResetAllDesc": {
+    "message": "The button below permanently deletes saved masks for all sites at once. This cannot be undone."
+  },
+  "optionsDeleteRuleFailed": {
+    "message": "Couldn't delete the mask. Please try again."
+  },
+  "optionsDeleteSiteFailed": {
+    "message": "Couldn't delete. Please try again."
+  },
+  "licenseErrTooManyAttempts": {
+    "message": "Too many attempts. Please try again later."
+  }
+}

@@ -9,16 +9,18 @@
   <div class="cloakli-popup">
 
     <!-- 첫 사용 안내: onboardingCompleted가 아직 false일 때만 보이고, 완료하거나
-         '사용 방법 다시 보기'를 눌렀을 때만 다시 나타난다. -->
+         '사용 방법 다시 보기'를 눌렀을 때만 다시 나타난다.
+         data-i18n: popup.js의 localizeDocument()가 _locales 메시지로 교체한다(테스트/
+         i18n 미지원 환경에서는 아래 한국어 원문이 그대로 보인다). -->
     <section id="cloakli-onboarding" class="cloakli-onboarding" hidden>
-      <h1 class="cloakli-title">Cloakli 사용 방법</h1>
+      <h1 class="cloakli-title" data-i18n="onboardingTitle">Cloakli 사용 방법</h1>
       <ol class="cloakli-onboarding-steps">
-        <li>'가릴 영역 선택'을 누르세요.</li>
-        <li>웹페이지에서 숨길 부분을 클릭하세요.</li>
-        <li>적용 범위를 선택하세요.</li>
-        <li>화면 공유를 시작하세요.</li>
+        <li data-i18n="onboardingStep1">'가릴 영역 선택'을 누르세요.</li>
+        <li data-i18n="onboardingStep2">웹페이지에서 숨길 부분을 클릭하세요.</li>
+        <li data-i18n="onboardingStep3">적용 범위를 선택하세요.</li>
+        <li data-i18n="onboardingStep4">화면 공유를 시작하세요.</li>
       </ol>
-      <button id="cloakli-onboarding-start-btn" class="cloakli-btn cloakli-btn-primary" type="button">
+      <button id="cloakli-onboarding-start-btn" class="cloakli-btn cloakli-btn-primary" type="button" data-i18n="onboardingStart">
         시작하기
       </button>
     </section>
@@ -27,7 +29,7 @@
     <section id="cloakli-main" class="cloakli-main">
       <header class="cloakli-header">
         <h1 class="cloakli-title">Cloakli</h1>
-        <p class="cloakli-tagline">화면 공유 전에 민감한 정보를 가리세요.</p>
+        <p class="cloakli-tagline" data-i18n="tagline">화면 공유 전에 민감한 정보를 가리세요.</p>
         <!-- CLOAKLI_DEV_ONLY_START: 개발 빌드에서만 보이는 표시. scripts/build.js가
              출시(production) 빌드에서는 이 블록 자체를 파일에서 제거한다. -->
         <p id="cloakli-dev-badge" class="cloakli-dev-badge" hidden>DEV BUILD</p>
@@ -39,13 +41,13 @@
       <section id="cloakli-license-section" class="cloakli-license-section">
         <!-- Free 상태: 구매/키 입력 진입점 -->
         <div id="cloakli-license-free-actions" class="cloakli-license-free-actions" hidden>
-          <button id="cloakli-buy-pro-btn" class="cloakli-btn cloakli-btn-secondary" type="button">Pro 구매하기</button>
-          <button id="cloakli-show-license-input-btn" class="cloakli-link-btn" type="button">라이선스 키 입력</button>
+          <button id="cloakli-buy-pro-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="buyProBtn">Pro 구매하기</button>
+          <button id="cloakli-show-license-input-btn" class="cloakli-link-btn" type="button" data-i18n="enterLicenseBtn">라이선스 키 입력</button>
         </div>
 
         <!-- 라이선스 키 입력 폼: "라이선스 키 입력"을 눌렀을 때만 펼쳐진다 -->
         <div id="cloakli-license-input-area" class="cloakli-license-input-area" hidden>
-          <label for="cloakli-license-key-input" class="cloakli-license-label">라이선스 키</label>
+          <label for="cloakli-license-key-input" class="cloakli-license-label" data-i18n="licenseKeyLabel">라이선스 키</label>
           <div class="cloakli-license-input-row">
             <input
               id="cloakli-license-key-input"
@@ -60,71 +62,72 @@
               class="cloakli-btn-icon"
               type="button"
               aria-label="라이선스 키 표시/숨기기"
+              data-i18n="licenseVisibilityShow"
+              data-i18n-aria="licenseVisibilityToggleAria"
             >
               표시
             </button>
           </div>
-          <button id="cloakli-activate-license-btn" class="cloakli-btn cloakli-btn-primary" type="button">Pro 활성화</button>
+          <button id="cloakli-activate-license-btn" class="cloakli-btn cloakli-btn-primary" type="button" data-i18n="activateLicenseBtn">Pro 활성화</button>
           <p id="cloakli-license-message" class="cloakli-license-message" aria-live="polite"></p>
         </div>
 
         <!-- 라이선스 서버로 활성화된 Pro 상태(Developer Pro와는 다른 표시) -->
         <div id="cloakli-license-active-info" class="cloakli-license-active-info" hidden>
-          <p class="cloakli-status-line">상태: <span id="cloakli-license-status-text"></span></p>
-          <p class="cloakli-status-line">마지막 확인: <span id="cloakli-license-last-checked"></span></p>
-          <p class="cloakli-status-line">라이선스: <span id="cloakli-license-masked-key"></span></p>
-          <button id="cloakli-recheck-license-btn" class="cloakli-btn cloakli-btn-secondary" type="button">
+          <p class="cloakli-status-line"><span data-i18n="licenseStatusLine">상태:</span> <span id="cloakli-license-status-text"></span></p>
+          <p class="cloakli-status-line"><span data-i18n="licenseLastCheckedLine">마지막 확인:</span> <span id="cloakli-license-last-checked"></span></p>
+          <p class="cloakli-status-line"><span data-i18n="licenseMaskedKeyLine">라이선스:</span> <span id="cloakli-license-masked-key"></span></p>
+          <button id="cloakli-recheck-license-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="recheckLicenseBtn">
             라이선스 다시 확인
           </button>
-          <button id="cloakli-deactivate-license-btn" class="cloakli-btn cloakli-btn-outline-danger" type="button">
+          <button id="cloakli-deactivate-license-btn" class="cloakli-btn cloakli-btn-outline-danger" type="button" data-i18n="deactivateLicenseBtn">
             이 기기에서 비활성화
           </button>
         </div>
       </section>
 
       <div id="cloakli-status-panel" class="cloakli-status-panel" aria-live="polite">
-        <p class="cloakli-status-line" id="cloakli-status-hostname">현재 사이트 확인 중…</p>
+        <p class="cloakli-status-line" id="cloakli-status-hostname" data-i18n="statusChecking">현재 사이트 확인 중…</p>
         <p class="cloakli-status-line" id="cloakli-status-count"></p>
         <p class="cloakli-status-line cloakli-status-state" id="cloakli-status-state"></p>
       </div>
 
       <div id="cloakli-status" class="cloakli-status-message" aria-live="polite"></div>
 
-      <button id="cloakli-select-btn" class="cloakli-btn cloakli-btn-primary" type="button">
+      <button id="cloakli-select-btn" class="cloakli-btn cloakli-btn-primary" type="button" data-i18n="selectBtn">
         가릴 영역 선택
       </button>
 
-      <button id="cloakli-pause-btn" class="cloakli-btn cloakli-btn-secondary" type="button">
+      <button id="cloakli-pause-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="pauseBtn">
         현재 사이트 가림 일시중지
       </button>
 
-      <button id="cloakli-clear-btn" class="cloakli-btn cloakli-btn-ghost" type="button">
+      <button id="cloakli-clear-btn" class="cloakli-btn cloakli-btn-ghost" type="button" data-i18n="clearBtn">
         현재 화면 가림만 잠시 해제
       </button>
-      <p class="cloakli-btn-note">저장된 규칙은 유지되며 새로고침하거나 페이지를 이동하면 다시 적용됩니다.</p>
+      <p class="cloakli-btn-note" data-i18n="clearBtnNote">저장된 규칙은 유지되며 새로고침하거나 페이지를 이동하면 다시 적용됩니다.</p>
 
-      <button id="cloakli-manage-btn" class="cloakli-btn cloakli-btn-secondary" type="button">
+      <button id="cloakli-manage-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="manageBtn">
         저장된 가림 관리
       </button>
 
       <footer class="cloakli-footer">
-        <button id="cloakli-help-btn" class="cloakli-link-btn" type="button">사용 방법 다시 보기</button>
-        <button id="cloakli-pro-info-btn" class="cloakli-link-btn" type="button">Pro 알아보기</button>
+        <button id="cloakli-help-btn" class="cloakli-link-btn" type="button" data-i18n="helpBtn">사용 방법 다시 보기</button>
+        <button id="cloakli-pro-info-btn" class="cloakli-link-btn" type="button" data-i18n="proInfoBtn">Pro 알아보기</button>
       </footer>
 
-      <!-- 실제 결제는 아직 없다. "Pro 알아보기"는 기능 목록만 보여주는 내부 안내 영역이다. -->
+      <!-- "Pro 알아보기" 기능 목록 안내 영역. CTA는 popup.js가 checkoutUrl 유무에 따라 채운다. -->
       <section id="cloakli-pro-info" class="cloakli-pro-info" hidden>
         <h2 class="cloakli-pro-info-title">Cloakli Pro</h2>
         <ul class="cloakli-pro-info-list">
-          <li>사이트 무제한</li>
-          <li>규칙 무제한</li>
-          <li>페이지 유형 범위</li>
-          <li>사이트 전체 범위</li>
-          <li>향후 추가될 Pro 기능</li>
+          <li data-i18n="proInfoFeature1">사이트 무제한</li>
+          <li data-i18n="proInfoFeature2">규칙 무제한</li>
+          <li data-i18n="proInfoFeature3">페이지 유형 범위</li>
+          <li data-i18n="proInfoFeature4">사이트 전체 범위</li>
+          <li data-i18n="proInfoFeature5">향후 추가될 Pro 기능</li>
         </ul>
-        <!-- 실제 내용은 popup.js가 CloakliBuildConfig.checkoutUrl 유무에 따라 채운다. -->
         <div id="cloakli-pro-info-cta" class="cloakli-pro-info-cta"></div>
-        <button id="cloakli-pro-info-close-btn" class="cloakli-btn cloakli-btn-secondary" type="button">닫기</button>
+        <button id="cloakli-pro-info-close-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="closeBtn">닫기</button>
       </section>
     </section>
 

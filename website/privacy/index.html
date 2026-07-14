@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — Cloakli</title>
+  <meta name="description" content="What Cloakli stores in your browser, what is sent for license verification, and what is never collected." />
+  <link rel="canonical" href="https://cloakli.pages.dev/privacy/" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body data-page="privacy">
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/assets/favicon.svg" alt="" /> Cloakli</a>
+      <nav class="nav">
+        <a href="/support/" data-i18n="navSupport">Support</a>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang-switch="en">EN</button>
+          <button type="button" data-lang-switch="ko">한국어</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+  <!-- ======================== English ======================== -->
+  <article class="doc" data-lang="en">
+    <h1>Privacy Policy</h1>
+    <p class="doc-meta">
+      Product: Cloakli (Chrome extension) · Operator: <span data-config="businessName">Cloakli</span> ·
+      Contact: <span data-config="supportEmail">cloakli.support@gmail.com</span><br />
+      Effective date: <span data-config="effectiveDate">2026-07-15</span> · Last updated: <span data-config="lastUpdated">2026-07-15</span>
+    </p>
+
+    <h2>Summary</h2>
+    <p>Cloakli draws visual masks over parts of web pages before you share your screen. Your masks and settings live in your browser. Cloakli has no accounts and no analytics. The only network communication the extension makes is with our license server, and only for verifying a Pro license.</p>
+
+    <h2>1. Data stored locally in your browser</h2>
+    <p>The following is stored with Chrome's local extension storage on your device and is not sent anywhere by itself:</p>
+    <ul>
+      <li>Mask rules: the CSS selector used to find the element again, the site hostname, the scope (element / page type / site), an optional page pattern (URL path), a structural fingerprint (tag/class/position and hashed link identifiers — never the text itself), and a random rule ID</li>
+      <li>Per-site pause state</li>
+      <li>Onboarding completion state</li>
+      <li>A random installation ID (generated with a random UUID; it contains no personal information)</li>
+      <li>If you activate Pro: a license session token, the last 4 characters of your license key (for display), and a cached license status</li>
+    </ul>
+    <p>The actual text, names, emails, images, or any other content of the pages you mask is <strong>not</strong> stored.</p>
+    <p>This website itself stores one value in your browser's localStorage: your language preference ("en" or "ko"). No cookies, no analytics.</p>
+
+    <h2>2. Data sent to our license server</h2>
+    <p>Only if you activate or verify a Pro license, the extension contacts our license server (a Cloudflare Worker at <code data-config="licenseServerHost">cloakli-license.mycloakli.workers.dev</code>) and sends:</p>
+    <ul>
+      <li>Your license key (once, during activation — the server stores only a SHA-256 hash of it)</li>
+      <li>The random installation ID</li>
+      <li>The license session token (for re-verification)</li>
+      <li>The extension version</li>
+    </ul>
+    <p>The server keeps request timestamps and limited technical records used for abuse prevention (rate limiting) and error handling. As with any internet service, your IP address is processed by the network infrastructure (Cloudflare) that delivers the request; we do not use it to identify you.</p>
+
+    <h2>3. Data that is never sent</h2>
+    <ul>
+      <li>Web page text or HTML</li>
+      <li>Email contents, video titles, channel names</li>
+      <li>Passwords or form input</li>
+      <li>Screenshots or the content of images</li>
+      <li>The actual text you masked</li>
+      <li>Your browsing history</li>
+    </ul>
+    <p>Cloakli contains no analytics, telemetry, or advertising trackers, and the release build is automatically checked to ensure the only outbound network call is to the license server.</p>
+
+    <h2>4. Third-party services</h2>
+    <table>
+      <tr><th>Service</th><th>Role</th></tr>
+      <tr><td>Chrome Web Store (Google)</td><td>Distributes and updates the extension. Google's own policies apply to the store.</td></tr>
+      <tr><td>Cloudflare</td><td>Hosts the license server (Workers/D1) and this website (Pages).</td></tr>
+      <tr><td>Lemon Squeezy</td><td>Merchant of record. Handles checkout, payment, invoices, license key issuing, and subscription management. Your payment card details are entered on and processed by Lemon Squeezy — Cloakli's servers never receive or store card details.</td></tr>
+    </table>
+
+    <h2>5. Data retention</h2>
+    <ul>
+      <li>Local data: delete individual masks in the extension's "Manage saved masks" page, or remove all local data by uninstalling the extension.</li>
+      <li>License records on the server store only hashes (license key hash, session token hash, installation ID hash) — never the originals.</li>
+      <li>Retention targets: deactivated device records and webhook processing metadata are kept up to 90 days; rate-limit records up to 30 days; active license records are kept while the license is in use and for the period needed for support and legal obligations.</li>
+    </ul>
+
+    <h2>6. Your choices</h2>
+    <ul>
+      <li>Delete any or all saved masks at any time in the extension</li>
+      <li>Deactivate your license on a device ("Deactivate on this device")</li>
+      <li>Cancel your subscription via Lemon Squeezy (see the <a href="/refund/">refund policy</a>)</li>
+      <li>Contact us for privacy questions or deletion requests: <span data-config="supportEmail">cloakli.support@gmail.com</span></li>
+    </ul>
+
+    <h2>7. Children</h2>
+    <p>Cloakli is a general-purpose productivity tool and is not directed at children under 13. We do not knowingly collect personal information from children.</p>
+
+    <h2>8. Changes</h2>
+    <p>If this policy changes, we will update the "Last updated" date above. Material changes will be noted on this page.</p>
+  </article>
+
+  <!-- ======================== 한국어 ======================== -->
+  <article class="doc" data-lang="ko" hidden>
+    <h1>개인정보처리방침</h1>
+    <p class="doc-meta">
+      제품: Cloakli (Chrome 확장 프로그램) · 운영자: <span data-config="businessName">Cloakli</span> ·
+      문의: <span data-config="supportEmail">cloakli.support@gmail.com</span><br />
+      시행일: <span data-config="effectiveDate">2026-07-15</span> · 최종 수정일: <span data-config="lastUpdated">2026-07-15</span>
+    </p>
+
+    <h2>요약</h2>
+    <p>Cloakli는 화면 공유 전에 웹페이지 일부를 시각적으로 가리는 도구입니다. 가림 규칙과 설정은 사용자의 브라우저 안에 저장됩니다. 계정 기능과 분석(analytics) 기능이 없으며, 확장 프로그램이 하는 유일한 네트워크 통신은 Pro 라이선스 확인을 위한 라이선스 서버 호출뿐입니다.</p>
+
+    <h2>1. 브라우저에 로컬로 저장되는 정보</h2>
+    <p>다음 정보는 Chrome 확장 프로그램 로컬 저장소에 사용자의 기기에만 저장되며, 그 자체로는 어디에도 전송되지 않습니다:</p>
+    <ul>
+      <li>가림 규칙: 요소를 다시 찾기 위한 CSS 선택자, 사이트 hostname, 적용 범위(요소/페이지 유형/사이트), 페이지 패턴(URL 경로), 구조 fingerprint(태그/클래스/위치와 해시된 링크 식별자 — 실제 텍스트는 포함하지 않음), 무작위 규칙 ID</li>
+      <li>사이트별 일시중지 상태</li>
+      <li>첫 사용 안내(onboarding) 완료 상태</li>
+      <li>무작위 설치 ID (무작위 UUID로 생성되며 개인정보를 포함하지 않음)</li>
+      <li>Pro 활성화 시: 라이선스 세션 토큰, 표시용 라이선스 키 마지막 4자리, 라이선스 상태 캐시</li>
+    </ul>
+    <p>가린 부분의 실제 텍스트, 이름, 이메일, 이미지 등 페이지 내용 자체는 <strong>저장하지 않습니다</strong>.</p>
+    <p>이 홈페이지는 브라우저 localStorage에 언어 선택("en"/"ko") 한 가지만 저장합니다. 쿠키와 분석 도구는 사용하지 않습니다.</p>
+
+    <h2>2. 라이선스 서버로 전송될 수 있는 정보</h2>
+    <p>Pro 라이선스를 활성화하거나 재확인할 때에만, 확장 프로그램이 라이선스 서버(Cloudflare Worker, <code data-config="licenseServerHost">cloakli-license.mycloakli.workers.dev</code>)에 다음을 전송합니다:</p>
+    <ul>
+      <li>라이선스 키(활성화 시 1회 — 서버에는 SHA-256 해시만 저장됩니다)</li>
+      <li>무작위 설치 ID</li>
+      <li>라이선스 세션 토큰(재확인용)</li>
+      <li>확장 프로그램 버전</li>
+    </ul>
+    <p>서버는 요청 시각과 오·남용 방지(요청 빈도 제한)·오류 처리에 필요한 제한된 기술 기록을 보관합니다. 다른 인터넷 서비스와 마찬가지로, 요청을 전달하는 네트워크 인프라(Cloudflare)에서 IP 주소가 처리될 수 있으나 이를 사용자 식별에 사용하지 않습니다.</p>
+
+    <h2>3. 절대 전송하지 않는 정보</h2>
+    <ul>
+      <li>웹페이지 본문·HTML</li>
+      <li>이메일 내용, 영상 제목, 채널명</li>
+      <li>비밀번호, 입력 폼 내용</li>
+      <li>화면 캡처, 이미지 내용</li>
+      <li>사용자가 가린 실제 텍스트</li>
+      <li>브라우징 기록</li>
+    </ul>
+    <p>Cloakli에는 분석·텔레메트리·광고 추적 코드가 없으며, 출시 빌드는 "라이선스 서버 외의 외부 통신 없음"을 자동 검사로 확인한 뒤에만 만들어집니다.</p>
+
+    <h2>4. 제3자 서비스</h2>
+    <table>
+      <tr><th>서비스</th><th>역할</th></tr>
+      <tr><td>Chrome 웹 스토어 (Google)</td><td>확장 프로그램의 배포와 업데이트를 담당합니다. 스토어 자체에는 Google의 정책이 적용됩니다.</td></tr>
+      <tr><td>Cloudflare</td><td>라이선스 서버(Workers/D1)와 이 홈페이지(Pages)를 호스팅합니다.</td></tr>
+      <tr><td>Lemon Squeezy</td><td>공식 판매자(Merchant of Record)로서 결제, 영수증, 라이선스 키 발급, 구독 관리를 처리합니다. 카드 정보는 Lemon Squeezy에서 입력·처리되며 Cloakli 서버는 카드 정보를 받지도, 저장하지도 않습니다.</td></tr>
+    </table>
+
+    <h2>5. 보관 기간</h2>
+    <ul>
+      <li>로컬 데이터: 확장 프로그램의 "저장된 가림 관리"에서 개별 삭제하거나, 확장 프로그램을 제거하면 모두 삭제됩니다.</li>
+      <li>서버의 라이선스 기록은 해시만 저장합니다(라이선스 키 해시, 세션 토큰 해시, 설치 ID 해시) — 원문은 저장하지 않습니다.</li>
+      <li>보관 기준: 비활성화된 기기 기록과 웹훅 처리 메타데이터는 최대 90일, 요청 빈도 제한 기록은 최대 30일을 기준으로 하며, 활성 라이선스 기록은 사용 기간과 지원·법적 의무에 필요한 기간 동안 보관합니다.</li>
+    </ul>
+
+    <h2>6. 사용자의 권리</h2>
+    <ul>
+      <li>저장된 가림을 언제든 개별/전체 삭제</li>
+      <li>기기에서 라이선스 비활성화("이 기기에서 비활성화")</li>
+      <li>Lemon Squeezy를 통한 구독 취소 (<a href="/refund/">환불 정책</a> 참고)</li>
+      <li>개인정보 문의·삭제 요청: <span data-config="supportEmail">cloakli.support@gmail.com</span></li>
+    </ul>
+
+    <h2>7. 아동</h2>
+    <p>Cloakli는 일반 업무용 도구로, 만 13세 미만 아동을 대상으로 하지 않으며 아동의 개인정보를 의도적으로 수집하지 않습니다.</p>
+
+    <h2>8. 변경</h2>
+    <p>이 방침이 변경되면 상단의 "최종 수정일"을 갱신하고, 중요한 변경은 이 페이지에 안내합니다.</p>
+  </article>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <a href="/privacy/" data-i18n="footerPrivacy">Privacy Policy</a>
+      <a href="/terms/" data-i18n="footerTerms">Terms of Service</a>
+      <a href="/refund/" data-i18n="footerRefund">Refund Policy</a>
+      <a href="/support/" data-i18n="footerSupport">Support</a>
+      <span class="copyright">© 2026 Cloakli</span>
+    </div>
+  </footer>
+
+  <script src="/site-config.js"></script>
+  <script src="/locales/ko.js"></script>
+  <script src="/assets/i18n.js"></script>
+</body>
+</html>

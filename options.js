@@ -4,6 +4,52 @@
 const STORAGE_KEY = "cloakliRules";
 const PAUSED_STORAGE_KEY = "cloakliPausedHostnames";
 
+// ---------------------------------------------------------------------
+// 다국어(i18n): 사용자에게 보이는 문구는 _locales/<언어>/messages.json에서 가져온다.
+// chrome.i18n을 쓸 수 없는 환경(자동 테스트)에서는 두 번째 인자(한국어 원문)를 그대로
+// 사용한다. $1, $2 자리표시자는 substitutions 배열 값으로 치환된다.
+// ---------------------------------------------------------------------
+function msg(key, fallback, substitutions) {
+  let text = null;
+  try {
+    if (typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage) {
+      text = chrome.i18n.getMessage(key, substitutions);
+    }
+  } catch (err) {
+    text = null;
+  }
+  if (!text) {
+    text = fallback;
+    (substitutions || []).forEach((value, i) => {
+      text = text.split("$" + (i + 1)).join(String(value));
+    });
+  }
+  return text;
+}
+
+// options.html의 정적 문구(data-i18n / data-i18n-aria / data-i18n-placeholder)를
+// 현재 브라우저 언어로 바꾼다. chrome.i18n이 없으면 HTML의 한국어 원문이 그대로 남는다.
+function localizeDocument() {
+  try {
+    if (!(typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage)) return;
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const m = chrome.i18n.getMessage(el.getAttribute("data-i18n"));
+      if (m) el.textContent = m;
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+      const m = chrome.i18n.getMessage(el.getAttribute("data-i18n-aria"));
+      if (m) el.setAttribute("aria-label", m);
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+      const m = chrome.i18n.getMessage(el.getAttribute("data-i18n-placeholder"));
+      if (m) el.setAttribute("placeholder", m);
+    });
+  } catch (err) {
+    // 문구 교체 실패가 설정 페이지 자체를 멈추게 하지 않는다.
+  }
+}
+localizeDocument();
+
 const listEl = document.getElementById("cloakli-options-list");
 const emptyEl = document.getElementById("cloakli-options-empty");
 const noMatchEl = document.getElementById("cloakli-options-no-match");
@@ -71,16 +117,16 @@ function showMessage(text) {
 }
 
 function formatDate(timestamp) {
-  if (typeof timestamp !== "number") return "알 수 없음";
+  if (typeof timestamp !== "number") return msg("optionsUnknownDate", "알 수 없음");
   try {
     const d = new Date(timestamp);
-    if (isNaN(d.getTime())) return "알 수 없음";
+    if (isNaN(d.getTime())) return msg("optionsUnknownDate", "알 수 없음");
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   } catch (err) {
-    return "알 수 없음";
+    return msg("optionsUnknownDate", "알 수 없음");
   }
 }
 
@@ -93,9 +139,9 @@ function truncateSelector(selector, maxLen) {
 
 // content.js/content-core.js와 동일한 scope 값을 사람이 읽기 쉬운 문구로 바꾼다.
 const SCOPE_LABELS = {
-  element: "이 요소만",
-  page: "현재 페이지 유형",
-  site: "사이트 전체",
+  element: msg("optionsScopeElement", "이 요소만"),
+  page: msg("optionsScopePage", "현재 페이지 유형"),
+  site: msg("optionsScopeSite", "사이트 전체"),
 };
 
 function describeScope(rule) {
@@ -195,7 +241,7 @@ function renderSites(all, pausedMap) {
 
   const totalRuleCount = allHostnames.reduce((sum, h) => sum + all[h].filter(isValidRule).length, 0);
   summaryEl.textContent =
-    allHostnames.length === 0 ? "" : `전체 ${allHostnames.length}개 사이트 · 규칙 ${totalRuleCount}개`;
+    allHostnames.length === 0 ? "" : msg("optionsSummary", "전체 $1개 사이트 · 규칙 $2개", [String(allHostnames.length), String(totalRuleCount)]);
 
   if (allHostnames.length === 0) {
     emptyEl.hidden = false;
@@ -243,7 +289,7 @@ function buildSiteCard(hostname, rules, paused) {
 
   const count = document.createElement("span");
   count.className = "cloakli-site-count";
-  count.textContent = `저장된 가림 ${rules.length}개`;
+  count.textContent = msg("optionsSiteCount", "저장된 가림 $1개", [String(rules.length)]);
 
   header.appendChild(title);
   header.appendChild(count);
@@ -251,7 +297,7 @@ function buildSiteCard(hostname, rules, paused) {
   if (paused) {
     const badge = document.createElement("span");
     badge.className = "cloakli-site-paused-badge";
-    badge.textContent = "일시중지됨";
+    badge.textContent = msg("optionsPausedBadge", "일시중지됨");
     header.appendChild(badge);
   }
 
@@ -267,7 +313,7 @@ function buildSiteCard(hostname, rules, paused) {
   const siteDeleteBtn = document.createElement("button");
   siteDeleteBtn.type = "button";
   siteDeleteBtn.className = "cloakli-btn cloakli-btn-outline-danger cloakli-site-delete-btn";
-  siteDeleteBtn.textContent = "이 사이트의 규칙 전부 삭제";
+  siteDeleteBtn.textContent = msg("optionsDeleteSite", "이 사이트의 규칙 전부 삭제");
   siteDeleteBtn.addEventListener("click", () => handleDeleteSite(hostname, rules.length));
   card.appendChild(siteDeleteBtn);
 
@@ -288,13 +334,13 @@ function buildRuleItem(hostname, rule, orderIndex) {
   metaEl.className = "cloakli-rule-meta";
 
   const scopeSpan = document.createElement("span");
-  scopeSpan.textContent = `적용 범위: ${describeScope(rule)}`;
+  scopeSpan.textContent = msg("optionsScopeLabel", "적용 범위: $1", [describeScope(rule)]);
 
   const modeSpan = document.createElement("span");
-  modeSpan.textContent = `가림 방식: ${rule.mode || "block"}`;
+  modeSpan.textContent = msg("optionsModeLabel", "가림 방식: $1", [rule.mode || "block"]);
 
   const dateSpan = document.createElement("span");
-  dateSpan.textContent = `생성일: ${formatDate(rule.createdAt)}`;
+  dateSpan.textContent = msg("optionsCreatedLabel", "생성일: $1", [formatDate(rule.createdAt)]);
 
   metaEl.appendChild(scopeSpan);
   metaEl.appendChild(modeSpan);
@@ -303,14 +349,14 @@ function buildRuleItem(hostname, rule, orderIndex) {
   // "현재 페이지 유형" 범위는 저장 당시의 page pattern도 함께 보여준다.
   if (rule.scope === "page" && rule.pagePattern) {
     const patternSpan = document.createElement("span");
-    patternSpan.textContent = `페이지 범위: ${rule.pagePattern}`;
+    patternSpan.textContent = msg("optionsPagePatternLabel", "페이지 범위: $1", [rule.pagePattern]);
     metaEl.appendChild(patternSpan);
   }
 
   const deleteBtn = document.createElement("button");
   deleteBtn.type = "button";
   deleteBtn.className = "cloakli-btn cloakli-btn-secondary cloakli-rule-delete-btn";
-  deleteBtn.textContent = "삭제";
+  deleteBtn.textContent = msg("optionsDeleteRule", "삭제");
   deleteBtn.addEventListener("click", () => handleDeleteRule(hostname, rule));
 
   item.appendChild(selectorEl);
@@ -327,7 +373,7 @@ function buildRuleItem(hostname, rule, orderIndex) {
   if (isLegacyBroadRule) {
     const riskWarning = document.createElement("p");
     riskWarning.className = "cloakli-rule-risk-warning";
-    riskWarning.textContent = "이 규칙은 이전 방식으로 저장되어 여러 요소에 적용될 수 있습니다.\n삭제 후 다시 등록해 주세요.";
+    riskWarning.textContent = msg("optionsRiskWarning", "이 규칙은 이전 방식으로 저장되어 여러 요소에 적용될 수 있습니다.\n삭제 후 다시 등록해 주세요.");
     item.appendChild(riskWarning);
   }
 
@@ -338,12 +384,12 @@ function buildRuleItem(hostname, rule, orderIndex) {
 // 규칙 하나만 영구 삭제한다. 삭제 직전 storage를 다시 읽어, 다른 곳에서 먼저
 // 바뀐 최신 상태를 기준으로 지운다(설정 페이지를 여러 개 열어도 안전).
 function handleDeleteRule(hostname, rule) {
-  const confirmed = window.confirm("이 가림 규칙을 영구 삭제하시겠습니까?");
+  const confirmed = window.confirm(msg("optionsConfirmDeleteRule", "이 가림 규칙을 영구 삭제하시겠습니까?"));
   if (!confirmed) return;
 
   chrome.storage.local.get([STORAGE_KEY], (result) => {
     if (chrome.runtime.lastError) {
-      showMessage("규칙을 삭제하지 못했습니다. 다시 시도해 주세요.");
+      showMessage(msg("optionsDeleteRuleFailed", "규칙을 삭제하지 못했습니다. 다시 시도해 주세요."));
       return;
     }
     const all = (result && result[STORAGE_KEY]) || {};
@@ -356,7 +402,7 @@ function handleDeleteRule(hostname, rule) {
     const nextList = outcome.list;
 
     if (!outcome.removed) {
-      showMessage("규칙을 찾지 못해 삭제하지 못했습니다. 목록을 새로고침합니다.");
+      showMessage(msg("optionsRuleNotFound", "규칙을 찾지 못해 삭제하지 못했습니다. 목록을 새로고침합니다."));
       render();
       return;
     }
@@ -369,10 +415,10 @@ function handleDeleteRule(hostname, rule) {
 
     chrome.storage.local.set({ [STORAGE_KEY]: all }, () => {
       if (chrome.runtime.lastError) {
-        showMessage("규칙을 삭제하지 못했습니다. 다시 시도해 주세요.");
+        showMessage(msg("optionsDeleteRuleFailed", "규칙을 삭제하지 못했습니다. 다시 시도해 주세요."));
         return;
       }
-      showMessage("가림 규칙을 삭제했습니다.");
+      showMessage(msg("optionsDeletedRule", "가림 규칙을 삭제했습니다."));
       render();
     });
   });
@@ -380,12 +426,12 @@ function handleDeleteRule(hostname, rule) {
 
 // 해당 hostname의 규칙 전체를 삭제한다. 다른 사이트의 규칙은 건드리지 않는다.
 function handleDeleteSite(hostname, count) {
-  const confirmed = window.confirm(`${hostname}에 저장된 가림 규칙 ${count}개를 모두 삭제하시겠습니까?`);
+  const confirmed = window.confirm(msg("optionsConfirmDeleteSite", "$1에 저장된 가림 규칙 $2개를 모두 삭제하시겠습니까?", [hostname, String(count)]));
   if (!confirmed) return;
 
   chrome.storage.local.get([STORAGE_KEY], (result) => {
     if (chrome.runtime.lastError) {
-      showMessage("삭제하지 못했습니다. 다시 시도해 주세요.");
+      showMessage(msg("optionsDeleteSiteFailed", "삭제하지 못했습니다. 다시 시도해 주세요."));
       return;
     }
     const all = (result && result[STORAGE_KEY]) || {};
@@ -393,10 +439,10 @@ function handleDeleteSite(hostname, count) {
 
     chrome.storage.local.set({ [STORAGE_KEY]: all }, () => {
       if (chrome.runtime.lastError) {
-        showMessage("삭제하지 못했습니다. 다시 시도해 주세요.");
+        showMessage(msg("optionsDeleteSiteFailed", "삭제하지 못했습니다. 다시 시도해 주세요."));
         return;
       }
-      showMessage(`${hostname}의 저장 규칙을 모두 삭제했습니다.`);
+      showMessage(msg("optionsDeletedSite", "$1의 저장 규칙을 모두 삭제했습니다.", [hostname]));
       render();
     });
   });
@@ -406,16 +452,16 @@ function handleDeleteSite(hostname, count) {
 // chrome.storage.local의 다른 key(향후 설정 등)는 영향을 받지 않는다.
 function handleResetAll() {
   const confirmed = window.confirm(
-    "모든 사이트에 저장된 Cloakli 가림 규칙이 영구 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.\n\n계속하시겠습니까?"
+    msg("optionsConfirmResetAll", "모든 사이트에 저장된 Cloakli 가림 규칙이 영구 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.\n\n계속하시겠습니까?")
   );
   if (!confirmed) return;
 
   chrome.storage.local.remove([STORAGE_KEY], () => {
     if (chrome.runtime.lastError) {
-      showMessage("초기화하지 못했습니다. 다시 시도해 주세요.");
+      showMessage(msg("optionsResetFailed", "초기화하지 못했습니다. 다시 시도해 주세요."));
       return;
     }
-    showMessage("모든 저장 규칙을 초기화했습니다.");
+    showMessage(msg("optionsResetDone", "모든 저장 규칙을 초기화했습니다."));
     render();
   });
 }

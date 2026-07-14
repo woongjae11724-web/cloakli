@@ -23,8 +23,8 @@ const RELEASE_FILES = [
   "build-config.js",
 ];
 
-// 파일뿐 아니라 폴더째로 복사해야 하는 정적 자산(아이콘 등). 폴더가 비어 있어도(현재
-// icons/에는 아이콘 파일이 없다) 오류 없이 건너뛴다.
-const RELEASE_DIRS = ["icons"];
+// 파일뿐 아니라 폴더째로 복사해야 하는 정적 자산(아이콘, 다국어 메시지). 폴더가
+// 비어 있어도 오류 없이 건너뛴다.
+const RELEASE_DIRS = ["icons", "_locales"];
 
 module.exports = { RELEASE_FILES, RELEASE_DIRS };

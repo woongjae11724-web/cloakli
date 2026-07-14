@@ -1,8 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Cloakli",
+  "name": "__MSG_extensionName__",
   "version": "0.1.0",
-  "description": "화면 공유 전에 웹페이지의 특정 영역을 클릭 한 번으로 완전히 가려주는 확장 프로그램",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
     "default_popup": "popup.html"
   },
@@ -28,14 +35,14 @@
         "default": "Ctrl+Shift+H",
         "mac": "Command+Shift+H"
       },
-      "description": "가릴 영역 선택 시작"
+      "description": "__MSG_commandStartSelection__"
     },
     "temporarily-clear-page": {
       "suggested_key": {
         "default": "Ctrl+Shift+U",
         "mac": "Command+Shift+U"
       },
-      "description": "현재 화면 가림 잠시 해제"
+      "description": "__MSG_commandTemporarilyClear__"
     }
   }
 }

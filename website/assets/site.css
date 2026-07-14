@@ -1,0 +1,180 @@
+/* Cloakli 공식 홈페이지 — 외부 폰트/CDN 없이 시스템 폰트만 사용한다.
+   브랜드: 단순함, 신뢰감, 업무 도구. popup.css와 같은 색(#1f2937/#4da3ff) 계열. */
+:root {
+  --bg: #0f1420;
+  --panel: #1e2533;
+  --panel-2: #171d2a;
+  --text: #eef1f6;
+  --muted: #9aa3b2;
+  --accent: #4da3ff;
+  --accent-soft: #8fd0a3;
+  --danger: #ff8080;
+  --border: #2c3547;
+  --max: 960px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+}
+
+a { color: var(--accent); }
+img { max-width: 100%; }
+
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+/* 헤더 */
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: rgba(15, 20, 32, 0.9);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.site-header .wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 60px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+  text-decoration: none;
+}
+.brand img { width: 26px; height: 26px; }
+.nav { margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+.nav a:hover { color: var(--text); }
+
+.lang-switch { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.lang-switch button {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.lang-switch button.active { background: var(--accent); color: #0b1220; font-weight: 700; }
+
+/* Hero */
+.hero { padding: 72px 0 48px; text-align: center; }
+.hero h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.25; margin: 0 0 16px; }
+.hero p.lead { font-size: 17px; color: var(--muted); max-width: 640px; margin: 0 auto 28px; white-space: pre-line; }
+.cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.btn-primary { background: var(--accent); color: #0b1220; }
+.btn-primary:hover { background: #6cb4ff; }
+.btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { border-color: var(--accent); }
+.btn.disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+.coming-soon-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+/* 섹션 공통 */
+section.block { padding: 48px 0; border-top: 1px solid var(--border); }
+section.block h2 { font-size: 26px; margin: 0 0 24px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.card h3 { margin: 0 0 8px; font-size: 16px; color: var(--accent); }
+.card p { margin: 0; font-size: 14px; color: var(--muted); white-space: pre-line; }
+
+/* 단계 */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; counter-reset: step; }
+.steps .card { position: relative; padding-top: 46px; }
+.steps .card::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  width: 24px; height: 24px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0b1220;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 요금제 */
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.plan { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.plan.pro { border-color: var(--accent); }
+.plan h3 { margin: 0 0 4px; font-size: 20px; }
+.plan ul { margin: 14px 0 0; padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 2; }
+.plan .btn { margin-top: 16px; }
+
+/* FAQ */
+.faq details {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+}
+.faq summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+.faq p { color: var(--muted); font-size: 14px; margin: 10px 0 0; white-space: pre-line; }
+
+/* 한계 안내 */
+.notice {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-soft);
+  border-radius: 10px;
+  padding: 18px 20px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.notice ul { margin: 8px 0 0; padding-left: 20px; line-height: 1.9; }
+
+/* 문서 페이지 (privacy/terms/refund/support) */
+.doc { padding: 48px 0 64px; max-width: 760px; margin: 0 auto; }
+.doc h1 { font-size: 30px; margin: 0 0 6px; }
+.doc .doc-meta { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+.doc h2 { font-size: 20px; margin: 32px 0 10px; color: var(--accent); }
+.doc h3 { font-size: 16px; margin: 22px 0 8px; }
+.doc p, .doc li { font-size: 14.5px; color: #c9d1de; }
+.doc ul { padding-left: 22px; line-height: 1.9; }
+.doc table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.doc th, .doc td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+.doc th { background: var(--panel-2); }
+.doc code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+.placeholder { color: var(--danger); font-weight: 700; }
+
+/* 푸터 */
+.site-footer { border-top: 1px solid var(--border); padding: 32px 0 48px; margin-top: 48px; }
+.site-footer .wrap { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+.site-footer a { color: var(--muted); text-decoration: none; font-size: 13px; }
+.site-footer a:hover { color: var(--text); }
+.site-footer .copyright { margin-left: auto; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 640px) {
+  .site-header .wrap { height: auto; padding: 10px 20px; flex-wrap: wrap; }
+  .hero { padding: 48px 0 36px; }
+  .site-footer .copyright { margin-left: 0; }
+}

@@ -183,6 +183,27 @@
     return { allowed: true, reason: null };
   }
 
+  // 사용자에게 보이는 문구는 chrome.i18n(_locales)에서 가져온다. chrome.i18n이 없는
+  // 환경(node 테스트, content script 밖)에서는 두 번째 인자(한국어 원문)를 그대로 쓴다.
+  // $1, $2 자리표시자는 substitutions 배열 값으로 치환된다.
+  function msg(key, fallback, substitutions) {
+    let text = null;
+    try {
+      if (typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage) {
+        text = chrome.i18n.getMessage(key, substitutions);
+      }
+    } catch (err) {
+      text = null;
+    }
+    if (!text) {
+      text = fallback;
+      (substitutions || []).forEach((value, i) => {
+        text = text.split("$" + (i + 1)).join(String(value));
+      });
+    }
+    return text;
+  }
+
   // popup에 표시할 짧은 한 줄 요금제 배지. popup.js는 이 결과를 그대로
   // textContent/className에 반영하기만 하고 스스로 문구를 판단하지 않는다.
   function describePopupPlanBadge(entitlementState, usage) {
@@ -190,13 +211,21 @@
     const u = usage || { totalRules: 0, hostnameCount: 0, hostnames: [] };
 
     if (state.source === "developer") {
-      return { text: "Developer Pro · 테스트용 Pro 모드", cssClass: "cloakli-plan-badge cloakli-plan-developer" };
+      return {
+        text: msg("planBadgeDeveloper", "Developer Pro · 테스트용 Pro 모드"),
+        cssClass: "cloakli-plan-badge cloakli-plan-developer",
+      };
     }
     if (isProUser(state)) {
-      return { text: "Pro · 규칙 및 사이트 무제한", cssClass: "cloakli-plan-badge cloakli-plan-pro" };
+      return { text: msg("planBadgePro", "Pro · 규칙 및 사이트 무제한"), cssClass: "cloakli-plan-badge cloakli-plan-pro" };
     }
     return {
-      text: "Free · 규칙 " + u.totalRules + "/" + FREE_PLAN_LIMITS.maxRules + " · 사이트 " + u.hostnameCount + "/" + FREE_PLAN_LIMITS.maxHostnames,
+      text: msg("planBadgeFree", "Free · 규칙 $1/$2 · 사이트 $3/$4", [
+        String(u.totalRules),
+        String(FREE_PLAN_LIMITS.maxRules),
+        String(u.hostnameCount),
+        String(FREE_PLAN_LIMITS.maxHostnames),
+      ]),
       cssClass: "cloakli-plan-badge cloakli-plan-free",
     };
   }
@@ -209,18 +238,21 @@
 
     if (state.source === "developer") {
       return {
-        lines: ["현재 요금제: Developer Pro", "개발 테스트용 무제한 모드"],
+        lines: [msg("optionsPlanDeveloperTitle", "현재 요금제: Developer Pro"), msg("optionsPlanDeveloperNote", "개발 테스트용 무제한 모드")],
         cssClass: "cloakli-options-plan cloakli-plan-developer",
       };
     }
     if (isProUser(state)) {
-      return { lines: ["현재 요금제: Pro", "저장 제한 없음"], cssClass: "cloakli-options-plan cloakli-plan-pro" };
+      return {
+        lines: [msg("optionsPlanProTitle", "현재 요금제: Pro"), msg("optionsPlanProNote", "저장 제한 없음")],
+        cssClass: "cloakli-options-plan cloakli-plan-pro",
+      };
     }
     return {
       lines: [
-        "현재 요금제: Free",
-        "사용 사이트: " + u.hostnameCount + "/" + FREE_PLAN_LIMITS.maxHostnames,
-        "저장 규칙: " + u.totalRules + "/" + FREE_PLAN_LIMITS.maxRules,
+        msg("optionsPlanFreeTitle", "현재 요금제: Free"),
+        msg("optionsPlanFreeSites", "사용 사이트: $1/$2", [String(u.hostnameCount), String(FREE_PLAN_LIMITS.maxHostnames)]),
+        msg("optionsPlanFreeRules", "저장 규칙: $1/$2", [String(u.totalRules), String(FREE_PLAN_LIMITS.maxRules)]),
       ],
       cssClass: "cloakli-options-plan cloakli-plan-free",
     };

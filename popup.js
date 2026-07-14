@@ -7,6 +7,49 @@ const STORAGE_KEY = "cloakliRules";
 const PAUSED_STORAGE_KEY = "cloakliPausedHostnames";
 const ONBOARDING_STORAGE_KEY = "cloakliOnboardingCompleted";
 
+// ---------------------------------------------------------------------
+// 다국어(i18n): 사용자에게 보이는 문구는 _locales/<언어>/messages.json에서 가져온다.
+// chrome.i18n을 쓸 수 없는 환경(자동 테스트)에서는 두 번째 인자(한국어 원문)를 그대로
+// 사용한다. $1, $2 자리표시자는 substitutions 배열 값으로 치환된다.
+// selector/storage key/내부 error code/message action 이름은 절대 번역하지 않는다.
+// ---------------------------------------------------------------------
+function msg(key, fallback, substitutions) {
+  let text = null;
+  try {
+    if (typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage) {
+      text = chrome.i18n.getMessage(key, substitutions);
+    }
+  } catch (err) {
+    text = null;
+  }
+  if (!text) {
+    text = fallback;
+    (substitutions || []).forEach((value, i) => {
+      text = text.split("$" + (i + 1)).join(String(value));
+    });
+  }
+  return text;
+}
+
+// popup.html의 정적 문구(data-i18n / data-i18n-aria)를 현재 브라우저 언어로 바꾼다.
+// chrome.i18n이 없으면(테스트) HTML에 있는 한국어 원문이 그대로 남는다.
+function localizeDocument() {
+  try {
+    if (!(typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage)) return;
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const m = chrome.i18n.getMessage(el.getAttribute("data-i18n"));
+      if (m) el.textContent = m;
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+      const m = chrome.i18n.getMessage(el.getAttribute("data-i18n-aria"));
+      if (m) el.setAttribute("aria-label", m);
+    });
+  } catch (err) {
+    // 문구 교체 실패가 팝업 자체를 멈추게 하지 않는다.
+  }
+}
+localizeDocument();
+
 const onboardingEl = document.getElementById("cloakli-onboarding");
 const mainEl = document.getElementById("cloakli-main");
 const onboardingStartBtn = document.getElementById("cloakli-onboarding-start-btn");
@@ -150,7 +193,7 @@ function getCheckoutUrl() {
 function openCheckoutUrl() {
   const url = getCheckoutUrl();
   if (!isSafeCheckoutUrl(url)) {
-    setLicenseMessage("Pro 결제 기능은 아직 준비되지 않았습니다.");
+    setLicenseMessage(msg("checkoutNotReady", "Pro 결제 기능은 아직 준비되지 않았습니다."));
     return;
   }
   chrome.tabs.create({ url });
@@ -166,13 +209,13 @@ function renderProInfoCta() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "cloakli-btn cloakli-btn-primary";
-    btn.textContent = "Pro 구매하기";
+    btn.textContent = msg("buyProBtn", "Pro 구매하기");
     btn.addEventListener("click", () => chrome.tabs.create({ url }));
     proInfoCtaEl.appendChild(btn);
   } else {
     const note = document.createElement("p");
     note.className = "cloakli-pro-info-note";
-    note.textContent = "Pro 결제 기능은 아직 준비되지 않았습니다.";
+    note.textContent = msg("checkoutNotReady", "Pro 결제 기능은 아직 준비되지 않았습니다.");
     proInfoCtaEl.appendChild(note);
   }
 }
@@ -182,26 +225,27 @@ function setLicenseMessage(text) {
 }
 
 // license-client.js가 돌려주는 오류 코드를 사용자에게 보여줄 문구로 바꾼다. 서버/네트워크
-// 내부 사정을 그대로 노출하지 않고, 알려진 코드만 한국어 문구로 변환한다.
+// 내부 사정을 그대로 노출하지 않고, 알려진 코드만 사용자 언어의 문구로 변환한다.
+// (서버의 error code 자체는 번역 대상이 아니다 — 표시 문구만 i18n 키로 매핑한다)
 function describeLicenseError(code) {
   const map = {
-    missing_license_key: "라이선스 키를 입력해 주세요.",
-    server_url_not_configured: "라이선스 서버 주소가 아직 설정되지 않았습니다.",
-    network_error: "서버에 연결하지 못했습니다. 인터넷 연결을 확인해 주세요.",
-    invalid_response: "서버 응답을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-    invalid_license: "유효하지 않은 라이선스 키입니다.",
-    product_mismatch: "이 라이선스는 Cloakli Pro용이 아닙니다.",
-    variant_mismatch: "이 라이선스는 Cloakli Pro용이 아닙니다.",
-    license_expired: "만료된 라이선스입니다.",
-    license_disabled: "비활성화된 라이선스입니다.",
-    activation_limit_reached: "이 라이선스의 기기 활성화 한도를 초과했습니다.",
-    rate_limited: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
-    too_many_attempts: "시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요.",
-    no_session: "활성화된 라이선스가 없습니다.",
-    invalid_session: "라이선스 세션이 만료되었습니다. 다시 활성화해 주세요.",
-    instance_deactivated: "이 기기의 라이선스가 비활성화되었습니다.",
+    missing_license_key: msg("licenseErrMissingKey", "라이선스 키를 입력해 주세요."),
+    server_url_not_configured: msg("licenseErrServerNotConfigured", "라이선스 서버 주소가 아직 설정되지 않았습니다."),
+    network_error: msg("licenseErrNetwork", "서버에 연결하지 못했습니다. 인터넷 연결을 확인해 주세요."),
+    invalid_response: msg("licenseErrInvalidResponse", "서버 응답을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."),
+    invalid_license: msg("licenseErrInvalidLicense", "유효하지 않은 라이선스 키입니다."),
+    product_mismatch: msg("licenseErrProductMismatch", "이 라이선스는 Cloakli Pro용이 아닙니다."),
+    variant_mismatch: msg("licenseErrProductMismatch", "이 라이선스는 Cloakli Pro용이 아닙니다."),
+    license_expired: msg("licenseErrExpired", "만료된 라이선스입니다."),
+    license_disabled: msg("licenseErrDisabled", "비활성화된 라이선스입니다."),
+    activation_limit_reached: msg("licenseErrActivationLimit", "이 라이선스의 기기 활성화 한도를 초과했습니다."),
+    rate_limited: msg("licenseErrRateLimited", "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."),
+    too_many_attempts: msg("licenseErrTooManyAttempts", "시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요."),
+    no_session: msg("licenseErrNoSession", "활성화된 라이선스가 없습니다."),
+    invalid_session: msg("licenseErrInvalidSession", "라이선스 세션이 만료되었습니다. 다시 활성화해 주세요."),
+    instance_deactivated: msg("licenseErrInstanceDeactivated", "이 기기의 라이선스가 비활성화되었습니다."),
   };
-  return (code && map[code]) || "라이선스 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  return (code && map[code]) || msg("licenseErrGeneric", "라이선스 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
 }
 
 // Free/License Pro/Developer Pro 세 가지 상태에 맞춰 라이선스 섹션을 다시 그린다.
@@ -221,12 +265,12 @@ async function renderLicenseSection() {
     licenseFreeActionsEl.hidden = true;
     licenseInputAreaEl.hidden = true;
     licenseActiveInfoEl.hidden = false;
-    licenseStatusTextEl.textContent = entitlementState.status === "active" ? "활성" : entitlementState.status || "알 수 없음";
+    licenseStatusTextEl.textContent = entitlementState.status === "active" ? msg("licenseStatusActive", "활성") : entitlementState.status || msg("licenseStatusUnknown", "알 수 없음");
     licenseLastCheckedEl.textContent = entitlementState.validatedAt
       ? new Date(entitlementState.validatedAt).toLocaleString()
-      : "확인된 적 없음";
+      : msg("licenseNeverChecked", "확인된 적 없음");
     const session = await CloakliLicenseClient.getStoredLicenseSession();
-    licenseMaskedKeyEl.textContent = CloakliLicenseClient.getMaskedLicenseKey(session) || "알 수 없음";
+    licenseMaskedKeyEl.textContent = CloakliLicenseClient.getMaskedLicenseKey(session) || msg("licenseStatusUnknown", "알 수 없음");
     return;
   }
 
@@ -246,17 +290,17 @@ showLicenseInputBtn.addEventListener("click", () => {
 toggleLicenseVisibilityBtn.addEventListener("click", () => {
   const showing = licenseKeyInput.type === "text";
   licenseKeyInput.type = showing ? "password" : "text";
-  toggleLicenseVisibilityBtn.textContent = showing ? "표시" : "숨기기";
+  toggleLicenseVisibilityBtn.textContent = showing ? msg("licenseVisibilityShow", "표시") : msg("licenseVisibilityHide", "숨기기");
 });
 
 activateLicenseBtn.addEventListener("click", () => {
   withButtonGuard(activateLicenseBtn, async () => {
     const key = licenseKeyInput.value;
     if (!key || !key.trim()) {
-      setLicenseMessage("라이선스 키를 입력해 주세요.");
+      setLicenseMessage(msg("licenseEnterKeyFirst", "라이선스 키를 입력해 주세요."));
       return;
     }
-    setLicenseMessage("확인 중…");
+    setLicenseMessage(msg("licenseChecking", "확인 중…"));
     let result;
     try {
       result = await CloakliLicenseClient.activateLicense(key);
@@ -268,7 +312,7 @@ activateLicenseBtn.addEventListener("click", () => {
       setLicenseMessage(describeLicenseError(result && result.error));
       return;
     }
-    setLicenseMessage("Pro가 활성화되었습니다.");
+    setLicenseMessage(msg("licenseActivated", "Pro가 활성화되었습니다."));
     licenseInputAreaEl.hidden = true;
     await refreshPlanBadge();
     await renderLicenseSection();
@@ -294,7 +338,7 @@ recheckLicenseBtn.addEventListener("click", () => {
 
 deactivateLicenseBtn.addEventListener("click", () => {
   withButtonGuard(deactivateLicenseBtn, async () => {
-    const confirmed = typeof window !== "undefined" && window.confirm ? window.confirm("이 기기에서 Pro 라이선스를 비활성화하시겠습니까?") : true;
+    const confirmed = typeof window !== "undefined" && window.confirm ? window.confirm(msg("licenseDeactivateConfirm", "이 기기에서 Pro 라이선스를 비활성화하시겠습니까?")) : true;
     if (!confirmed) return;
     try {
       await CloakliLicenseClient.deactivateLicense();
@@ -328,7 +372,7 @@ function refreshPlanBadge() {
 
 // 팝업을 열 때 현재 활성 탭의 hostname/저장 규칙 개수/일시중지 여부를 읽어 상태 패널에 표시한다.
 async function refreshStatus() {
-  statusHostnameEl.textContent = "현재 사이트 확인 중…";
+  statusHostnameEl.textContent = msg("statusChecking", "현재 사이트 확인 중…");
   statusCountEl.textContent = "";
   statusStateEl.textContent = "";
   statusStateEl.className = "cloakli-status-line cloakli-status-state";
@@ -347,9 +391,9 @@ async function refreshStatus() {
   if (!tab || !tab.url || TabActions.isUnsupportedUrl(tab.url)) {
     currentSupported = false;
     currentHostname = null;
-    statusHostnameEl.textContent = "이 페이지에서는 Cloakli를 사용할 수 없습니다.";
+    statusHostnameEl.textContent = msg("statusUnsupportedPage", "이 페이지에서는 Cloakli를 사용할 수 없습니다.");
     statusCountEl.textContent = "";
-    statusStateEl.textContent = "일반 웹사이트에서 다시 시도해 주세요.";
+    statusStateEl.textContent = msg("statusTryNormalSite", "일반 웹사이트에서 다시 시도해 주세요.");
     statusStateEl.classList.add("cloakli-state-unsupported");
     // 지원하지 않는 페이지에서는 팝업 전체가 멈추지 않도록 버튼을 비활성 상태로 유지한다.
     manageBtn.disabled = false; // 관리 화면 자체는 항상 열 수 있다.
@@ -366,14 +410,14 @@ async function refreshStatus() {
   currentSupported = !!hostname;
 
   if (!hostname) {
-    statusHostnameEl.textContent = "이 페이지에서는 Cloakli를 사용할 수 없습니다.";
-    statusStateEl.textContent = "일반 웹사이트에서 다시 시도해 주세요.";
+    statusHostnameEl.textContent = msg("statusUnsupportedPage", "이 페이지에서는 Cloakli를 사용할 수 없습니다.");
+    statusStateEl.textContent = msg("statusTryNormalSite", "일반 웹사이트에서 다시 시도해 주세요.");
     statusStateEl.classList.add("cloakli-state-unsupported");
     manageBtn.disabled = false;
     return;
   }
 
-  statusHostnameEl.textContent = `현재 사이트: ${hostname}`;
+  statusHostnameEl.textContent = msg("currentSiteLabel", "현재 사이트: $1", [hostname]);
   selectBtn.disabled = false;
   pauseBtn.disabled = false;
   clearBtn.disabled = false;
@@ -387,7 +431,7 @@ async function refreshStatus() {
       }
       const allRules = (result && result[STORAGE_KEY]) || {};
       const list = Array.isArray(allRules[hostname]) ? allRules[hostname] : [];
-      statusCountEl.textContent = `저장된 가림: ${list.length}개`;
+      statusCountEl.textContent = msg("savedMaskCount", "저장된 가림: $1개", [String(list.length)]);
 
       const pausedMap = (result && result[PAUSED_STORAGE_KEY]) || {};
       currentPaused = pausedMap[hostname] === true;
@@ -400,13 +444,13 @@ async function refreshStatus() {
 
 function updatePauseUi() {
   if (currentPaused) {
-    statusStateEl.textContent = "상태: 이 사이트에서 일시중지됨";
+    statusStateEl.textContent = msg("statePaused", "상태: 이 사이트에서 일시중지됨");
     statusStateEl.className = "cloakli-status-line cloakli-status-state cloakli-state-paused";
-    pauseBtn.textContent = "현재 사이트 가림 다시 시작";
+    pauseBtn.textContent = msg("resumeBtn", "현재 사이트 가림 다시 시작");
   } else {
-    statusStateEl.textContent = "상태: 가림 작동 중";
+    statusStateEl.textContent = msg("stateActive", "상태: 가림 작동 중");
     statusStateEl.className = "cloakli-status-line cloakli-status-state";
-    pauseBtn.textContent = "현재 사이트 가림 일시중지";
+    pauseBtn.textContent = msg("pauseBtn", "현재 사이트 가림 일시중지");
   }
 }
 
@@ -416,9 +460,9 @@ function updatePauseUi() {
 // 객체나 stack trace를 노출하지 않고, development에서만 개인정보 없는 오류 코드를 덧붙인다.
 function describeDispatchFailure(result) {
   if (result && result.unsupported) {
-    return "이 페이지에서는 Cloakli를 사용할 수 없습니다.\n일반 웹사이트에서 다시 시도해 주세요.";
+    return msg("statusUnsupportedPage", "이 페이지에서는 Cloakli를 사용할 수 없습니다.") + "\n" + msg("statusTryNormalSite", "일반 웹사이트에서 다시 시도해 주세요.");
   }
-  let message = "Cloakli를 현재 페이지에서 시작하지 못했습니다.\n확장 프로그램을 새로고침한 뒤 웹페이지도 다시 열어 주세요.";
+  let message = msg("dispatchFailed", "Cloakli를 현재 페이지에서 시작하지 못했습니다.\n확장 프로그램을 새로고침한 뒤 웹페이지도 다시 열어 주세요.");
   const isDevBuild = typeof CloakliBuildConfig !== "undefined" && CloakliBuildConfig && CloakliBuildConfig.mode === "development";
   if (isDevBuild) {
     message += "\n(개발 오류: CONTENT_SCRIPT_UNAVAILABLE)";
@@ -428,7 +472,7 @@ function describeDispatchFailure(result) {
 
 selectBtn.addEventListener("click", () => {
   withButtonGuard(selectBtn, async () => {
-    setStatusMessage("웹페이지에서 가릴 영역을 클릭하세요…");
+    setStatusMessage(msg("selectionPrompt", "웹페이지에서 가릴 영역을 클릭하세요…"));
     let result;
     try {
       result = await TabActions.dispatchCloakliMessage("START_SELECTION_MODE");
@@ -439,7 +483,7 @@ selectBtn.addEventListener("click", () => {
       setStatusMessage(describeDispatchFailure(result));
       return;
     }
-    setStatusMessage("선택 모드가 시작되었습니다. 팝업을 닫아도 계속 동작합니다.");
+    setStatusMessage(msg("selectionStarted", "선택 모드가 시작되었습니다. 팝업을 닫아도 계속 동작합니다."));
   });
 });
 
@@ -455,7 +499,7 @@ clearBtn.addEventListener("click", () => {
       setStatusMessage(describeDispatchFailure(result));
       return;
     }
-    setStatusMessage("현재 화면의 가림을 잠시 해제했습니다.");
+    setStatusMessage(msg("clearedTemporarilyPopup", "현재 화면의 가림을 잠시 해제했습니다."));
   });
 });
 
@@ -489,7 +533,7 @@ pauseBtn.addEventListener("click", () => {
 
     currentPaused = nextPaused;
     updatePauseUi();
-    setStatusMessage(nextPaused ? "이 사이트의 가림을 일시중지했습니다." : "이 사이트의 가림을 다시 시작합니다.");
+    setStatusMessage(nextPaused ? msg("pausedToastPopup", "이 사이트의 가림을 일시중지했습니다.") : msg("resumedToastPopup", "이 사이트의 가림을 다시 시작합니다."));
   });
 });
 

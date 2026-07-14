@@ -191,25 +191,32 @@ describe("build.js: 파일 복사", () => {
 });
 
 describe("build.js: 개발/출시 빌드 이름 구분 (Cloakli DEV vs Cloakli)", () => {
-  test("development manifest의 name은 'Cloakli DEV', description은 개발 빌드 표시가 붙는다", () => {
+  // manifest가 다국어 키(__MSG_extensionName__)를 쓰므로, 실제 사용자에게 보이는
+  // 이름/설명은 dist의 _locales 기본 언어(en) 메시지를 resolve해서 검사한다.
+  const { resolveManifestMessage } = require("../scripts/build");
+
+  test("development 빌드의 표시 이름은 'Cloakli DEV', 설명에는 개발 빌드 표시가 붙는다", () => {
     const root = createFixtureRoot();
     const distDir = path.join(root, "out-dev");
     buildMode("development", { rootDir: root, distDir });
 
     const manifest = JSON.parse(fs.readFileSync(path.join(distDir, "manifest.json"), "utf8"));
-    assert.equal(manifest.name, "Cloakli DEV");
-    assert.match(manifest.description, /^\[개발 빌드\]/);
+    assert.equal(resolveManifestMessage(manifest.name, distDir), "Cloakli DEV");
+    assert.match(resolveManifestMessage(manifest.description, distDir), /^\[개발 빌드\]/);
+    // ko 메시지에도 같은 라벨이 적용되어야 한다(한국어 Chrome에서도 DEV가 구분되도록).
+    const ko = JSON.parse(fs.readFileSync(path.join(distDir, "_locales", "ko", "messages.json"), "utf8"));
+    assert.equal(ko.extensionName.message, "Cloakli DEV");
     removeRecursive(root);
   });
 
-  test("production manifest의 name은 'Cloakli', description에 개발 문구가 없다", () => {
+  test("production 빌드의 표시 이름은 'Cloakli', 설명에 개발 문구가 없다", () => {
     const root = createFixtureRoot();
     const distDir = path.join(root, "out-prod");
     buildMode("production", { rootDir: root, distDir });
 
     const manifest = JSON.parse(fs.readFileSync(path.join(distDir, "manifest.json"), "utf8"));
-    assert.equal(manifest.name, "Cloakli");
-    assert.ok(!manifest.description.includes("[개발 빌드]"));
+    assert.equal(resolveManifestMessage(manifest.name, distDir), "Cloakli");
+    assert.ok(!resolveManifestMessage(manifest.description, distDir).includes("[개발 빌드]"));
     removeRecursive(root);
   });
 

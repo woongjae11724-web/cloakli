@@ -4,11 +4,15 @@
   "version": "0.1.0",
   "description": "Cloakli Chrome 확장 프로그램 - 자동 테스트 (외부 의존성 없음, Node 내장 test runner만 사용)",
   "scripts": {
-    "test": "node --test --test-concurrency=1 tests/content-core.test.js tests/entitlement.test.js tests/content-integration.test.js tests/tab-actions.test.js tests/popup.test.js tests/regression.test.js tests/build.test.js",
+    "test": "node --test --test-concurrency=1 tests/content-core.test.js tests/entitlement.test.js tests/content-integration.test.js tests/tab-actions.test.js tests/popup.test.js tests/regression.test.js tests/build.test.js tests/i18n.test.js tests/website.test.js",
     "build:dev": "node scripts/build.js development",
     "build:prod": "node scripts/build.js production",
     "validate:prod": "node scripts/validate-release.js",
     "package:prod": "npm test && npm run build:prod && npm run validate:prod && node scripts/package-release.js",
-    "release:check": "npm test && npm run build:prod && npm run validate:prod"
+    "release:check": "npm test && npm run build:prod && npm run validate:prod",
+    "website:check": "node scripts/check-website.js",
+    "website:check:strict": "node scripts/check-website.js --strict",
+    "website:preview": "npx serve website",
+    "website:deploy": "node scripts/check-website.js && npx wrangler pages deploy website --project-name=cloakli"
   }
 }

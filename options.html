@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Cloakli - 저장된 가림 관리</title>
+  <title data-i18n="optionsTitle">Cloakli - 저장된 가림 관리</title>
   <link rel="stylesheet" href="options.css" />
 </head>
 <body>
@@ -15,26 +15,25 @@
         실제 출시용 데이터와 혼동하지 마세요.
       </div>
       <!-- CLOAKLI_DEV_ONLY_END -->
-      <h1>Cloakli - 저장된 가림 관리</h1>
-      <p class="cloakli-options-desc">
+      <h1 data-i18n="optionsHeading">Cloakli - 저장된 가림 관리</h1>
+      <p class="cloakli-options-desc" data-i18n="optionsIntro">
         사이트별로 저장된 가림 규칙을 확인하고 삭제할 수 있습니다. 웹페이지의 실제 텍스트·이름·이메일·이미지는
         저장되지 않으며, 요소를 다시 찾기 위한 CSS 선택자만 보관됩니다.
       </p>
       <div id="cloakli-options-plan" class="cloakli-options-plan" aria-live="polite"></div>
-      <button id="cloakli-options-pro-info-btn" class="cloakli-link-btn" type="button">Pro 알아보기</button>
+      <button id="cloakli-options-pro-info-btn" class="cloakli-link-btn" type="button" data-i18n="proInfoBtn">Pro 알아보기</button>
 
-      <!-- 실제 결제는 아직 없다. "Pro 알아보기"는 기능 목록만 보여주는 내부 안내 영역이다. -->
+      <!-- "Pro 알아보기" 기능 목록 안내 영역 -->
       <section id="cloakli-options-pro-info" class="cloakli-pro-info" hidden>
         <h2 class="cloakli-pro-info-title">Cloakli Pro</h2>
         <ul class="cloakli-pro-info-list">
-          <li>사이트 무제한</li>
-          <li>규칙 무제한</li>
-          <li>페이지 유형 범위</li>
-          <li>사이트 전체 범위</li>
-          <li>향후 추가될 Pro 기능</li>
+          <li data-i18n="proInfoFeature1">사이트 무제한</li>
+          <li data-i18n="proInfoFeature2">규칙 무제한</li>
+          <li data-i18n="proInfoFeature3">페이지 유형 범위</li>
+          <li data-i18n="proInfoFeature4">사이트 전체 범위</li>
+          <li data-i18n="proInfoFeature5">향후 추가될 Pro 기능</li>
         </ul>
-        <p class="cloakli-pro-info-note">Pro 결제 기능은 출시 준비 중입니다.</p>
-        <button id="cloakli-options-pro-info-close-btn" class="cloakli-btn cloakli-btn-secondary" type="button">닫기</button>
+        <button id="cloakli-options-pro-info-close-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="closeBtn">닫기</button>
       </section>
 
       <p id="cloakli-options-summary" class="cloakli-options-summary"></p>
@@ -44,16 +43,18 @@
         type="search"
         placeholder="사이트 주소로 검색 (예: youtube.com)"
         aria-label="저장된 사이트 검색"
+        data-i18n-placeholder="optionsSearchPlaceholder"
+        data-i18n-aria="optionsSearchAria"
       />
     </header>
 
     <div id="cloakli-options-message" class="cloakli-options-message" aria-live="polite"></div>
 
-    <div id="cloakli-options-no-match" class="cloakli-options-empty" hidden>
+    <div id="cloakli-options-no-match" class="cloakli-options-empty" hidden data-i18n="optionsNoMatch">
       검색 결과가 없습니다.
     </div>
 
-    <div id="cloakli-options-empty" class="cloakli-options-empty" hidden>
+    <div id="cloakli-options-empty" class="cloakli-options-empty" hidden data-i18n="optionsEmpty">
       아직 저장된 가림 규칙이 없습니다.<br /><br />
       웹페이지에서 Cloakli를 열고<br />
       '가릴 영역 선택'을 눌러 규칙을 추가하세요.
@@ -62,10 +63,10 @@
     <div id="cloakli-options-list" class="cloakli-options-list"></div>
 
     <footer class="cloakli-options-footer">
-      <p class="cloakli-options-footer-desc">
+      <p class="cloakli-options-footer-desc" data-i18n="optionsResetAllDesc">
         아래 버튼은 모든 사이트의 저장된 가림 규칙을 한 번에 영구 삭제합니다. 이 작업은 되돌릴 수 없습니다.
       </p>
-      <button id="cloakli-reset-all-btn" class="cloakli-btn cloakli-btn-danger" type="button">
+      <button id="cloakli-reset-all-btn" class="cloakli-btn cloakli-btn-danger" type="button" data-i18n="optionsResetAll">
         모든 저장 규칙 초기화
       </button>
     </footer>

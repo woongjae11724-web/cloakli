@@ -7,6 +7,7 @@
 const fs = require("fs");
 const path = require("path");
 const { listFilesRecursive } = require("./fs-utils");
+const { resolveManifestMessage } = require("./build");
 
 const ROOT_DIR = path.join(__dirname, "..");
 const DEFAULT_DIST_DIR = path.join(ROOT_DIR, "dist", "production");
@@ -121,13 +122,35 @@ function validateManifest(distDir, errors) {
   }
   if (!manifest.description) errors.push("manifest.json에 description이 없습니다.");
 
-  // validate-release.js는 출시(production) 빌드 검증 전용이므로, 개발 빌드 전용 표시가
-  // 이름/설명에 남아 있으면 항상 실패시킨다.
-  if (manifest.name === "Cloakli DEV" || /\bDEV\b/.test(manifest.name || "")) {
-    errors.push('manifest.json의 name이 개발 빌드 표시("' + manifest.name + '")로 되어 있습니다. 출시 빌드는 "Cloakli"여야 합니다.');
+  // 다국어 manifest(__MSG_키__)면 실제 사용자에게 보이는 값은 _locales에서 나온다.
+  // 이름/설명 검사는 해석된(resolved) 값 기준으로 한다. 다국어 키를 쓰는 경우
+  // default_locale과 _locales 메시지 파일의 존재도 함께 확인한다.
+  const usesI18nName = /^__MSG_.+__$/.test(String(manifest.name || ""));
+  if (usesI18nName) {
+    if (!manifest.default_locale) errors.push("manifest가 __MSG_ 키를 쓰지만 default_locale이 없습니다.");
+    ["en", "ko"].forEach((lang) => {
+      const p = path.join(distDir, "_locales", lang, "messages.json");
+      if (!fs.existsSync(p)) {
+        errors.push("_locales/" + lang + "/messages.json이 배포 폴더에 없습니다.");
+        return;
+      }
+      try {
+        JSON.parse(readText(p));
+      } catch (err) {
+        errors.push("_locales/" + lang + "/messages.json이 유효한 JSON이 아닙니다: " + err.message);
+      }
+    });
   }
-  if (/\[개발 빌드\]/.test(manifest.description || "")) {
-    errors.push("manifest.json의 description에 개발 빌드 표시(\"[개발 빌드]\")가 남아 있습니다.");
+  const resolvedName = resolveManifestMessage(manifest.name, distDir);
+  const resolvedDescription = resolveManifestMessage(manifest.description, distDir);
+
+  // validate-release.js는 출시(production) 빌드 검증 전용이므로, 개발 빌드 전용 표시가
+  // (해석된) 이름/설명에 남아 있으면 항상 실패시킨다.
+  if (resolvedName === "Cloakli DEV" || /\bDEV\b/.test(resolvedName || "")) {
+    errors.push('manifest의 이름이 개발 빌드 표시("' + resolvedName + '")로 되어 있습니다. 출시 빌드는 "Cloakli"여야 합니다.');
+  }
+  if (/\[개발 빌드\]/.test(resolvedDescription || "")) {
+    errors.push("manifest의 설명에 개발 빌드 표시(\"[개발 빌드]\")가 남아 있습니다.");
   }
 
   if (!manifest.action || !manifest.action.default_popup) {

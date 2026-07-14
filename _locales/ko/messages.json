@@ -1,0 +1,497 @@
+{
+  "extensionName": {
+    "message": "Cloakli"
+  },
+  "extensionDescription": {
+    "message": "화면 공유 전에 웹페이지의 민감한 정보를 간편하게 가립니다."
+  },
+  "commandStartSelection": {
+    "message": "가릴 영역 선택 시작"
+  },
+  "commandTemporarilyClear": {
+    "message": "현재 화면 가림 잠시 해제"
+  },
+  "onboardingTitle": {
+    "message": "Cloakli 사용 방법"
+  },
+  "onboardingStep1": {
+    "message": "'가릴 영역 선택'을 누르세요."
+  },
+  "onboardingStep2": {
+    "message": "웹페이지에서 숨길 부분을 클릭하세요."
+  },
+  "onboardingStep3": {
+    "message": "적용 범위를 선택하세요."
+  },
+  "onboardingStep4": {
+    "message": "화면 공유를 시작하세요."
+  },
+  "onboardingStart": {
+    "message": "시작하기"
+  },
+  "tagline": {
+    "message": "화면 공유 전에 민감한 정보를 가리세요."
+  },
+  "selectBtn": {
+    "message": "가릴 영역 선택"
+  },
+  "pauseBtn": {
+    "message": "현재 사이트 가림 일시중지"
+  },
+  "resumeBtn": {
+    "message": "현재 사이트 가림 다시 시작"
+  },
+  "clearBtn": {
+    "message": "현재 화면 가림만 잠시 해제"
+  },
+  "clearBtnNote": {
+    "message": "저장된 규칙은 유지되며 새로고침하거나 페이지를 이동하면 다시 적용됩니다."
+  },
+  "manageBtn": {
+    "message": "저장된 가림 관리"
+  },
+  "helpBtn": {
+    "message": "사용 방법 다시 보기"
+  },
+  "proInfoBtn": {
+    "message": "Pro 알아보기"
+  },
+  "closeBtn": {
+    "message": "닫기"
+  },
+  "statusChecking": {
+    "message": "현재 사이트 확인 중…"
+  },
+  "statusUnsupportedPage": {
+    "message": "이 페이지에서는 Cloakli를 사용할 수 없습니다."
+  },
+  "statusTryNormalSite": {
+    "message": "일반 웹사이트에서 다시 시도해 주세요."
+  },
+  "currentSiteLabel": {
+    "message": "현재 사이트: $1"
+  },
+  "savedMaskCount": {
+    "message": "저장된 가림: $1개"
+  },
+  "statePaused": {
+    "message": "상태: 이 사이트에서 일시중지됨"
+  },
+  "stateActive": {
+    "message": "상태: 가림 작동 중"
+  },
+  "selectionStarted": {
+    "message": "선택 모드가 시작되었습니다. 팝업을 닫아도 계속 동작합니다."
+  },
+  "selectionPrompt": {
+    "message": "웹페이지에서 가릴 영역을 클릭하세요…"
+  },
+  "dispatchFailed": {
+    "message": "Cloakli를 현재 페이지에서 시작하지 못했습니다.\n확장 프로그램을 새로고침한 뒤 웹페이지도 다시 열어 주세요."
+  },
+  "clearedTemporarilyPopup": {
+    "message": "현재 화면의 가림을 잠시 해제했습니다."
+  },
+  "pausedToastPopup": {
+    "message": "이 사이트의 가림을 일시중지했습니다."
+  },
+  "resumedToastPopup": {
+    "message": "이 사이트의 가림을 다시 시작합니다."
+  },
+  "proInfoFeature1": {
+    "message": "사이트 무제한"
+  },
+  "proInfoFeature2": {
+    "message": "규칙 무제한"
+  },
+  "proInfoFeature3": {
+    "message": "페이지 유형 범위"
+  },
+  "proInfoFeature4": {
+    "message": "사이트 전체 범위"
+  },
+  "proInfoFeature5": {
+    "message": "향후 추가될 Pro 기능"
+  },
+  "checkoutNotReady": {
+    "message": "Pro 결제 기능은 아직 준비되지 않았습니다."
+  },
+  "buyProBtn": {
+    "message": "Pro 구매하기"
+  },
+  "enterLicenseBtn": {
+    "message": "라이선스 키 입력"
+  },
+  "licenseKeyLabel": {
+    "message": "라이선스 키"
+  },
+  "licenseVisibilityToggleAria": {
+    "message": "라이선스 키 표시/숨기기"
+  },
+  "licenseVisibilityShow": {
+    "message": "표시"
+  },
+  "licenseVisibilityHide": {
+    "message": "숨기기"
+  },
+  "activateLicenseBtn": {
+    "message": "Pro 활성화"
+  },
+  "licenseStatusLine": {
+    "message": "상태:"
+  },
+  "licenseLastCheckedLine": {
+    "message": "마지막 확인:"
+  },
+  "licenseMaskedKeyLine": {
+    "message": "라이선스:"
+  },
+  "recheckLicenseBtn": {
+    "message": "라이선스 다시 확인"
+  },
+  "deactivateLicenseBtn": {
+    "message": "이 기기에서 비활성화"
+  },
+  "licenseStatusActive": {
+    "message": "활성"
+  },
+  "licenseStatusUnknown": {
+    "message": "알 수 없음"
+  },
+  "licenseNeverChecked": {
+    "message": "확인된 적 없음"
+  },
+  "licenseChecking": {
+    "message": "확인 중…"
+  },
+  "licenseActivated": {
+    "message": "Pro가 활성화되었습니다."
+  },
+  "licenseEnterKeyFirst": {
+    "message": "라이선스 키를 입력해 주세요."
+  },
+  "licenseDeactivateConfirm": {
+    "message": "이 기기에서 Pro 라이선스를 비활성화하시겠습니까?"
+  },
+  "licenseErrMissingKey": {
+    "message": "라이선스 키를 입력해 주세요."
+  },
+  "licenseErrServerNotConfigured": {
+    "message": "라이선스 서버 주소가 아직 설정되지 않았습니다."
+  },
+  "licenseErrNetwork": {
+    "message": "서버에 연결하지 못했습니다. 인터넷 연결을 확인해 주세요."
+  },
+  "licenseErrInvalidResponse": {
+    "message": "서버 응답을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "licenseErrInvalidLicense": {
+    "message": "유효하지 않은 라이선스 키입니다."
+  },
+  "licenseErrProductMismatch": {
+    "message": "이 라이선스는 Cloakli Pro용이 아닙니다."
+  },
+  "licenseErrExpired": {
+    "message": "만료된 라이선스입니다."
+  },
+  "licenseErrDisabled": {
+    "message": "비활성화된 라이선스입니다."
+  },
+  "licenseErrActivationLimit": {
+    "message": "이 라이선스의 기기 활성화 한도를 초과했습니다."
+  },
+  "licenseErrRateLimited": {
+    "message": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "licenseErrNoSession": {
+    "message": "활성화된 라이선스가 없습니다."
+  },
+  "licenseErrInvalidSession": {
+    "message": "라이선스 세션이 만료되었습니다. 다시 활성화해 주세요."
+  },
+  "licenseErrInstanceDeactivated": {
+    "message": "이 기기의 라이선스가 비활성화되었습니다."
+  },
+  "licenseErrGeneric": {
+    "message": "라이선스 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "planBadgeDeveloper": {
+    "message": "Developer Pro · 테스트용 Pro 모드"
+  },
+  "planBadgePro": {
+    "message": "Pro · 규칙 및 사이트 무제한"
+  },
+  "planBadgeFree": {
+    "message": "Free · 규칙 $1/$2 · 사이트 $3/$4"
+  },
+  "optionsPlanDeveloperTitle": {
+    "message": "현재 요금제: Developer Pro"
+  },
+  "optionsPlanDeveloperNote": {
+    "message": "개발 테스트용 무제한 모드"
+  },
+  "optionsPlanProTitle": {
+    "message": "현재 요금제: Pro"
+  },
+  "optionsPlanProNote": {
+    "message": "저장 제한 없음"
+  },
+  "optionsPlanFreeTitle": {
+    "message": "현재 요금제: Free"
+  },
+  "optionsPlanFreeSites": {
+    "message": "사용 사이트: $1/$2"
+  },
+  "optionsPlanFreeRules": {
+    "message": "저장 규칙: $1/$2"
+  },
+  "bannerFrozenSelection": {
+    "message": "화면이 고정되었습니다.\n가릴 영역을 클릭하세요\nESC를 누르면 취소됩니다."
+  },
+  "bannerTooLarge": {
+    "message": "선택한 영역이 너무 큽니다. 더 작은 요소를 다시 선택해 주세요."
+  },
+  "bannerNoTargetAtPoint": {
+    "message": "이 위치에서는 선택할 요소를 찾지 못했습니다. 다른 곳을 클릭해 주세요."
+  },
+  "scopePickerTitle": {
+    "message": "가림 범위를 선택하세요."
+  },
+  "scopePickerAria": {
+    "message": "Cloakli 가림 범위 선택"
+  },
+  "selectedTargetLabel": {
+    "message": "선택한 대상: $1"
+  },
+  "targetThumbnail": {
+    "message": "썸네일"
+  },
+  "targetShortsThumbnail": {
+    "message": "Shorts 썸네일"
+  },
+  "targetTitle": {
+    "message": "제목"
+  },
+  "targetChannelName": {
+    "message": "채널명"
+  },
+  "targetDateTime": {
+    "message": "날짜·시간"
+  },
+  "targetText": {
+    "message": "텍스트"
+  },
+  "targetImage": {
+    "message": "이미지"
+  },
+  "targetGeneric": {
+    "message": "선택한 영역"
+  },
+  "scopeElementLabel": {
+    "message": "이 요소만"
+  },
+  "scopeElementDesc": {
+    "message": "현재 선택한 요소 하나만 가립니다.\n페이지 구조가 바뀌면 다시 적용되지 않을 수 있습니다."
+  },
+  "scopeElementDisabled": {
+    "message": "안정적인 가림 규칙을 만들지 못했습니다.\n다른 요소를 선택해 주세요."
+  },
+  "scopePageLabel": {
+    "message": "현재 페이지 유형의 같은 요소"
+  },
+  "scopePageDesc": {
+    "message": "현재 페이지의 같은 역할과 같은 구조만 가립니다."
+  },
+  "scopeSiteLabel": {
+    "message": "이 사이트의 같은 요소"
+  },
+  "scopeSiteDesc": {
+    "message": "이 사이트의 같은 역할과 같은 구조만 가립니다."
+  },
+  "scopeCancel": {
+    "message": "취소"
+  },
+  "scopeCancelAria": {
+    "message": "가림 범위 선택 취소"
+  },
+  "proBadgeFeature": {
+    "message": "기능"
+  },
+  "safetySelectorMissing": {
+    "message": "안정적인 가림 규칙을 만들지 못했습니다."
+  },
+  "safetySelectorTooLong": {
+    "message": "선택 범위를 특정하기에 구조가 너무 복잡합니다."
+  },
+  "safetyTooGeneric": {
+    "message": "선택 범위가 너무 넓어 저장하지 않았습니다."
+  },
+  "safetyNoMatches": {
+    "message": "일치하는 요소를 찾지 못했습니다."
+  },
+  "safetyTooManyMatches": {
+    "message": "선택 범위가 너무 넓어 저장하지 않았습니다."
+  },
+  "safetyOriginalNotIncluded": {
+    "message": "선택한 요소가 결과에 포함되지 않아 사용할 수 없습니다."
+  },
+  "safetyCoversTooMuch": {
+    "message": "선택 범위가 화면의 너무 많은 부분을 차지해 저장하지 않았습니다."
+  },
+  "safetySelectorInvalid": {
+    "message": "선택 범위를 계산하지 못했습니다."
+  },
+  "safetyMixedRole": {
+    "message": "서로 다른 종류의 요소가 섞여 있어 이 범위는 사용할 수 없습니다."
+  },
+  "safetyGenericFail": {
+    "message": "이 범위는 사용할 수 없습니다."
+  },
+  "freeLimitRules": {
+    "message": "무료판에서는 가림 규칙을 최대 3개까지 저장할 수 있습니다.\n기존 규칙을 삭제하거나 Pro로 업그레이드하세요."
+  },
+  "freeLimitHostnames": {
+    "message": "무료판에서는 1개 사이트에서만 저장 기능을 사용할 수 있습니다.\n기존 사이트 규칙을 삭제하거나 Pro로 업그레이드하세요."
+  },
+  "freeLimitScope": {
+    "message": "페이지 유형과 사이트 전체 가림은 Pro 기능입니다.\n무료판에서는 '이 요소만'을 사용할 수 있습니다."
+  },
+  "freeLimitGeneric": {
+    "message": "무료판 한도로 인해 저장하지 못했습니다."
+  },
+  "toastSavedElement": {
+    "message": "이 요소의 가림이 저장되었습니다."
+  },
+  "toastSavedPage": {
+    "message": "현재 페이지 유형에 같은 요소 $1개가 저장되었습니다."
+  },
+  "toastSavedSite": {
+    "message": "이 사이트의 같은 종류 요소 가림이 저장되었습니다."
+  },
+  "toastDuplicate": {
+    "message": "이미 저장된 가림 영역입니다."
+  },
+  "toastCoveredBySite": {
+    "message": "이 사이트 전체에 이미 같은 규칙이 적용되어 있어 추가로 저장하지 않았습니다."
+  },
+  "toastSaveFailed": {
+    "message": "현재 요소는 저장하지 못했습니다.\n가림은 이번 페이지에서만 유지됩니다."
+  },
+  "toastTooBroad": {
+    "message": "선택 범위가 너무 넓어 저장하지 않았습니다.\n더 구체적인 요소를 선택해 주세요."
+  },
+  "toastClearedTemp": {
+    "message": "현재 화면의 가림을 잠시 해제했습니다.\n새로고침하거나 페이지를 이동하면 다시 적용됩니다."
+  },
+  "toastRulesResynced": {
+    "message": "저장 규칙이 삭제되어 화면을 다시 확인했습니다."
+  },
+  "toastSitePaused": {
+    "message": "이 사이트의 가림이 일시중지되었습니다."
+  },
+  "toastSiteResumed": {
+    "message": "이 사이트의 가림을 다시 시작합니다."
+  },
+  "optionsTitle": {
+    "message": "Cloakli - 저장된 가림 관리"
+  },
+  "optionsHeading": {
+    "message": "Cloakli - 저장된 가림 관리"
+  },
+  "optionsIntro": {
+    "message": "사이트별로 저장된 가림 규칙을 확인하고 삭제할 수 있습니다. 웹페이지의 실제 텍스트·이름·이메일·이미지는 저장되지 않으며, 요소를 다시 찾기 위한 CSS 선택자만 보관됩니다."
+  },
+  "optionsSearchPlaceholder": {
+    "message": "사이트 주소로 검색 (예: youtube.com)"
+  },
+  "optionsSearchAria": {
+    "message": "저장된 사이트 검색"
+  },
+  "optionsSummary": {
+    "message": "전체 $1개 사이트 · 규칙 $2개"
+  },
+  "optionsEmpty": {
+    "message": "아직 저장된 가림 규칙이 없습니다.\n\n웹페이지에서 Cloakli를 열고\n'가릴 영역 선택'을 눌러 규칙을 추가하세요."
+  },
+  "optionsNoMatch": {
+    "message": "검색 결과가 없습니다."
+  },
+  "optionsResetAll": {
+    "message": "모든 저장 규칙 초기화"
+  },
+  "optionsResetAllDesc": {
+    "message": "아래 버튼은 모든 사이트의 저장된 가림 규칙을 한 번에 영구 삭제합니다. 이 작업은 되돌릴 수 없습니다."
+  },
+  "optionsSiteCount": {
+    "message": "저장된 가림 $1개"
+  },
+  "optionsPausedBadge": {
+    "message": "일시중지됨"
+  },
+  "optionsScopeLabel": {
+    "message": "적용 범위: $1"
+  },
+  "optionsScopeElement": {
+    "message": "이 요소만"
+  },
+  "optionsScopePage": {
+    "message": "현재 페이지 유형"
+  },
+  "optionsScopeSite": {
+    "message": "사이트 전체"
+  },
+  "optionsModeLabel": {
+    "message": "가림 방식: $1"
+  },
+  "optionsCreatedLabel": {
+    "message": "생성일: $1"
+  },
+  "optionsPagePatternLabel": {
+    "message": "페이지 범위: $1"
+  },
+  "optionsUnknownDate": {
+    "message": "알 수 없음"
+  },
+  "optionsRiskWarning": {
+    "message": "이 규칙은 이전 방식으로 저장되어 여러 요소에 적용될 수 있습니다.\n삭제 후 다시 등록해 주세요."
+  },
+  "optionsDeleteRule": {
+    "message": "삭제"
+  },
+  "optionsDeleteSite": {
+    "message": "이 사이트의 규칙 전부 삭제"
+  },
+  "optionsConfirmDeleteRule": {
+    "message": "이 가림 규칙을 영구 삭제하시겠습니까?"
+  },
+  "optionsConfirmDeleteSite": {
+    "message": "$1에 저장된 가림 규칙 $2개를 모두 삭제하시겠습니까?"
+  },
+  "optionsConfirmResetAll": {
+    "message": "모든 사이트에 저장된 Cloakli 가림 규칙이 영구 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.\n\n계속하시겠습니까?"
+  },
+  "optionsDeletedRule": {
+    "message": "가림 규칙을 삭제했습니다."
+  },
+  "optionsDeletedSite": {
+    "message": "$1의 저장 규칙을 모두 삭제했습니다."
+  },
+  "optionsResetDone": {
+    "message": "모든 저장 규칙을 초기화했습니다."
+  },
+  "optionsDeleteRuleFailed": {
+    "message": "규칙을 삭제하지 못했습니다. 다시 시도해 주세요."
+  },
+  "optionsDeleteSiteFailed": {
+    "message": "삭제하지 못했습니다. 다시 시도해 주세요."
+  },
+  "optionsRuleNotFound": {
+    "message": "규칙을 찾지 못해 삭제하지 못했습니다. 목록을 새로고침합니다."
+  },
+  "optionsResetFailed": {
+    "message": "초기화하지 못했습니다. 다시 시도해 주세요."
+  },
+  "licenseErrTooManyAttempts": {
+    "message": "시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요."
+  }
+}

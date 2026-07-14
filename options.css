@@ -147,6 +147,8 @@ body {
   background: #1e1f24;
   border-radius: 10px;
   border: 1px dashed #35373f;
+  /* i18n 문구는 <br> 대신 \n 줄바꿈을 쓰므로 그대로 렌더링되게 한다 */
+  white-space: pre-line;
 }
 
 .cloakli-options-list {

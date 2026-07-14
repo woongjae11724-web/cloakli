@@ -47,10 +47,16 @@ function buildProductionConfigSource(sourceConfig) {
 // manifest.json의 name/description을 빌드 모드에 맞게 바꾼 새 객체를 돌려준다(원본은
 // 변경하지 않는 순수 함수). 개발 빌드와 출시 빌드를 Chrome 확장 목록에서 한눈에
 // 구분할 수 있도록, 개발 빌드에만 "Cloakli DEV"/"[개발 빌드]" 표시를 붙인다.
+//
+// manifest가 다국어 키(__MSG_extensionName__)를 쓰는 경우 manifest 자체는 건드리지 않고
+// (키를 리터럴로 바꾸면 다국어가 깨진다), 대신 buildMode()가 출력 폴더의 _locales
+// 메시지 파일에 같은 라벨을 적용한다(applyLocaleBuildLabel).
 function applyManifestBuildLabel(manifest, mode) {
   const result = Object.assign({}, manifest);
-  const baseDescription = String(manifest.description || "").replace(/^\[개발 빌드\]\s*/, "");
+  const usesI18nName = /^__MSG_.+__$/.test(String(manifest.name || ""));
+  if (usesI18nName) return result;
 
+  const baseDescription = String(manifest.description || "").replace(/^\[개발 빌드\]\s*/, "");
   if (mode === "development") {
     result.name = "Cloakli DEV";
     if (result.short_name) result.short_name = "Cloakli DEV";
@@ -63,6 +69,38 @@ function applyManifestBuildLabel(manifest, mode) {
     result.description = baseDescription;
   }
   return result;
+}
+
+// _locales/<언어>/messages.json 객체에 빌드 라벨을 적용한 새 객체를 돌려준다(순수 함수).
+// 개발 빌드: extensionName → "Cloakli DEV", extensionDescription 앞에 "[개발 빌드] ".
+// 출시 빌드: 라벨이 남아 있으면 항상 제거해 원래 값으로 되돌린다.
+function applyLocaleBuildLabel(messages, mode) {
+  const result = JSON.parse(JSON.stringify(messages || {}));
+  const baseName = String((result.extensionName && result.extensionName.message) || "Cloakli").replace(/\s*DEV$/, "");
+  const baseDescription = String((result.extensionDescription && result.extensionDescription.message) || "").replace(/^\[개발 빌드\]\s*/, "");
+
+  if (mode === "development") {
+    result.extensionName = { message: baseName + " DEV" };
+    result.extensionDescription = { message: "[개발 빌드] " + baseDescription };
+  } else {
+    result.extensionName = { message: baseName };
+    result.extensionDescription = { message: baseDescription };
+  }
+  return result;
+}
+
+// dist manifest의 __MSG_키__ 값을 dist의 _locales 기본 언어(en) 메시지로 해석한다.
+// validate-release.js와 빌드 테스트가 "실제 사용자에게 보이는 이름"을 검사할 때 쓴다.
+function resolveManifestMessage(value, distDir) {
+  const match = /^__MSG_(.+)__$/.exec(String(value || ""));
+  if (!match) return value;
+  try {
+    const messages = JSON.parse(fs.readFileSync(path.join(distDir, "_locales", "en", "messages.json"), "utf8"));
+    const entry = messages[match[1]];
+    return entry && entry.message ? entry.message : value;
+  } catch (err) {
+    return value;
+  }
 }
 
 // popup.html/options.html 안의 "CLOAKLI_DEV_ONLY_START ~ CLOAKLI_DEV_ONLY_END" 주석
@@ -125,6 +163,18 @@ function buildMode(mode, options) {
   const labeledManifest = applyManifestBuildLabel(manifestJson, mode);
   fs.writeFileSync(manifestDistPath, JSON.stringify(labeledManifest, null, 2) + "\n", "utf8");
 
+  // manifest가 다국어 키를 쓰면 실제 표시 이름은 _locales에서 나오므로, 출력 폴더의
+  // 모든 언어 메시지 파일에 빌드 라벨(Cloakli DEV/[개발 빌드])을 적용한다.
+  const localesDistDir = path.join(distDir, "_locales");
+  if (/^__MSG_.+__$/.test(String(labeledManifest.name || "")) && fs.existsSync(localesDistDir)) {
+    fs.readdirSync(localesDistDir).forEach((lang) => {
+      const messagesPath = path.join(localesDistDir, lang, "messages.json");
+      if (!fs.existsSync(messagesPath)) return;
+      const messages = JSON.parse(fs.readFileSync(messagesPath, "utf8"));
+      fs.writeFileSync(messagesPath, JSON.stringify(applyLocaleBuildLabel(messages, mode), null, 2) + "\n", "utf8");
+    });
+  }
+
   if (mode === "production") {
     // 출시 빌드에는 DEV BUILD 배지/개발 빌드 안내 배너 마크업 자체를 남기지 않는다.
     ["popup.html", "options.html"].forEach((relPath) => {
@@ -150,4 +200,12 @@ if (require.main === module) {
   }
 }
 
-module.exports = { buildMode, buildProductionConfigSource, applyManifestBuildLabel, stripDevOnlyMarkup, VALID_MODES };
+module.exports = {
+  buildMode,
+  buildProductionConfigSource,
+  applyManifestBuildLabel,
+  applyLocaleBuildLabel,
+  resolveManifestMessage,
+  stripDevOnlyMarkup,
+  VALID_MODES,
+};

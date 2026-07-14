@@ -40,6 +40,28 @@
     if (CLOAKLI_DEBUG) console.debug("[Cloakli]", ...args);
   }
 
+  // 다국어(i18n): 사용자에게 보이는 문구는 _locales/<언어>/messages.json에서 가져온다.
+  // chrome.i18n을 쓸 수 없는 환경(자동 테스트)에서는 두 번째 인자(한국어 원문)를 그대로
+  // 사용한다. $1, $2 자리표시자는 substitutions 배열 값으로 치환된다.
+  // selector/CSS class/내부 error code/storage key/message action 이름은 번역하지 않는다.
+  function msg(key, fallback, substitutions) {
+    let text = null;
+    try {
+      if (typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage) {
+        text = chrome.i18n.getMessage(key, substitutions);
+      }
+    } catch (err) {
+      text = null;
+    }
+    if (!text) {
+      text = fallback;
+      (substitutions || []).forEach((value, i) => {
+        text = text.split("$" + (i + 1)).join(String(value));
+      });
+    }
+    return text;
+  }
+
   // 자식 요소를 가질 수 없거나 오버레이가 정상적으로 렌더링되지 않는 태그 목록
   const VOID_LIKE_TAGS = ["IMG", "INPUT", "IFRAME", "VIDEO", "CANVAS", "EMBED", "OBJECT", "TEXTAREA"];
 
@@ -156,7 +178,7 @@
     if (isSelectionShieldElement(el)) {
       el = resolveSelectionTargetAtPoint(e.clientX, e.clientY);
       if (!el) {
-        flashBannerMessage("이 위치에서는 선택할 요소를 찾지 못했습니다. 다른 곳을 클릭해 주세요.");
+        flashBannerMessage(msg("bannerNoTargetAtPoint", "이 위치에서는 선택할 요소를 찾지 못했습니다. 다른 곳을 클릭해 주세요."));
         return;
       }
     }
@@ -164,7 +186,7 @@
     if (!isSelectable(el)) return;
 
     if (isTooLarge(el)) {
-      flashBannerMessage("선택한 영역이 너무 큽니다. 더 작은 요소를 다시 선택해 주세요.");
+      flashBannerMessage(msg("bannerTooLarge", "선택한 영역이 너무 큽니다. 더 작은 요소를 다시 선택해 주세요."));
       return;
     }
 
@@ -842,16 +864,16 @@
   // 범위 선택 UI에 표시할 "선택한 대상" 문구. 개발 용어/selector는 노출하지 않는다.
   function describeSelectionTargetLabel(role, family) {
     if (role === "thumbnail") {
-      return family === "shorts-card" ? "Shorts 썸네일" : "썸네일";
+      return family === "shorts-card" ? msg("targetShortsThumbnail", "Shorts 썸네일") : msg("targetThumbnail", "썸네일");
     }
     const labels = {
-      title: "제목",
-      "channel-name": "채널명",
-      "date-time": "날짜·시간",
-      "generic-text": "텍스트",
-      "generic-image": "이미지",
+      title: msg("targetTitle", "제목"),
+      "channel-name": msg("targetChannelName", "채널명"),
+      "date-time": msg("targetDateTime", "날짜·시간"),
+      "generic-text": msg("targetText", "텍스트"),
+      "generic-image": msg("targetImage", "이미지"),
     };
-    return labels[role] || "선택한 영역";
+    return labels[role] || msg("targetGeneric", "선택한 영역");
   }
 
   // node의 형제 중, 같은 태그이면서 같은 안정적 class 조합을 가진 것이 3개 이상(자기 자신 포함)
@@ -1045,11 +1067,11 @@
   // 무료 한도로 규칙 저장이 차단된 이유를 사용자에게 보여줄 문구로 바꾼다.
   function describeFreeLimitReason(reason) {
     const reasons = {
-      "rule-limit": "무료판에서는 가림 규칙을 최대 3개까지 저장할 수 있습니다.\n기존 규칙을 삭제하거나 Pro로 업그레이드하세요.",
-      "hostname-limit": "무료판에서는 1개 사이트에서만 저장 기능을 사용할 수 있습니다.\n기존 사이트 규칙을 삭제하거나 Pro로 업그레이드하세요.",
-      "scope-not-allowed": "페이지 유형과 사이트 전체 가림은 Pro 기능입니다.\n무료판에서는 '이 요소만'을 사용할 수 있습니다.",
+      "rule-limit": msg("freeLimitRules", "무료판에서는 가림 규칙을 최대 3개까지 저장할 수 있습니다.\n기존 규칙을 삭제하거나 Pro로 업그레이드하세요."),
+      "hostname-limit": msg("freeLimitHostnames", "무료판에서는 1개 사이트에서만 저장 기능을 사용할 수 있습니다.\n기존 사이트 규칙을 삭제하거나 Pro로 업그레이드하세요."),
+      "scope-not-allowed": msg("freeLimitScope", "페이지 유형과 사이트 전체 가림은 Pro 기능입니다.\n무료판에서는 '이 요소만'을 사용할 수 있습니다."),
     };
-    return reasons[reason] || "무료판 한도로 인해 저장하지 못했습니다.";
+    return reasons[reason] || msg("freeLimitGeneric", "무료판 한도로 인해 저장하지 못했습니다.");
   }
 
   // 새 규칙(scope 포함)을 저장한다. 완전히 같은 규칙(hostname+scope+selector+pagePattern)이
@@ -1133,7 +1155,7 @@
 
     if (!hostname || !partialRule || !partialRule.selector) {
       rollbackNewMasks();
-      showCloakliToast("현재 요소는 저장하지 못했습니다.\n가림은 이번 페이지에서만 유지됩니다.", "error");
+      showCloakliToast(msg("toastSaveFailed", "현재 요소는 저장하지 못했습니다.\n가림은 이번 페이지에서만 유지됩니다."), "error");
       return;
     }
 
@@ -1157,7 +1179,7 @@
     saveRule(newRule).then((result) => {
       if (!result || !result.ok) {
         rollbackNewMasks();
-        showCloakliToast("현재 요소는 저장하지 못했습니다.\n가림은 이번 페이지에서만 유지됩니다.", "error");
+        showCloakliToast(msg("toastSaveFailed", "현재 요소는 저장하지 못했습니다.\n가림은 이번 페이지에서만 유지됩니다."), "error");
       } else if (result.blocked) {
         // 무료 한도로 저장이 차단됨: storage에 남지 않으므로, 이번에 새로 만든 임시 가림도
         // 즉시 제거해 새로고침 전에도 원래(가려지지 않은) 상태로 되돌린다.
@@ -1165,9 +1187,9 @@
         showCloakliToast(describeFreeLimitReason(result.reason), "warning");
       } else if (result.duplicate) {
         // 이미 저장되어 있던 규칙과 완전히 같음: 방금 가린 것은 실제로 유효한 가림이므로 유지한다.
-        showCloakliToast("이미 저장된 가림 영역입니다.", "info");
+        showCloakliToast(msg("toastDuplicate", "이미 저장된 가림 영역입니다."), "info");
       } else if (result.coveredBySite) {
-        showCloakliToast("이 사이트 전체에 이미 같은 규칙이 적용되어 있어 추가로 저장하지 않았습니다.", "info");
+        showCloakliToast(msg("toastCoveredBySite", "이 사이트 전체에 이미 같은 규칙이 적용되어 있어 추가로 저장하지 않았습니다."), "info");
       } else {
         ruleCountCache += 1; // observer가 즉시 재적용 대상에 포함하도록 캐시를 갱신한다.
         showCloakliToast(successText, "success");
@@ -1672,7 +1694,7 @@
     }
   }
 
-  const SELECTION_BANNER_TEXT = "화면이 고정되었습니다.\n가릴 영역을 클릭하세요\nESC를 누르면 취소됩니다.";
+  const SELECTION_BANNER_TEXT = msg("bannerFrozenSelection", "화면이 고정되었습니다.\n가릴 영역을 클릭하세요\nESC를 누르면 취소됩니다.");
 
   function showBanner() {
     removeBanner();
@@ -1747,17 +1769,17 @@
   function describeGeneralSafetyFailure(safety) {
     if (!safety || safety.ok) return "";
     const reasons = {
-      "selector-missing": "안정적인 가림 규칙을 만들지 못했습니다.",
-      "selector-too-long": "선택 범위를 특정하기에 구조가 너무 복잡합니다.",
-      "selector-too-generic": "선택 범위가 너무 넓어 저장하지 않았습니다.",
-      "no-matches": "일치하는 요소를 찾지 못했습니다.",
-      "too-many-matches": "선택 범위가 너무 넓어 저장하지 않았습니다.",
-      "original-not-included": "선택한 요소가 결과에 포함되지 않아 사용할 수 없습니다.",
-      "covers-too-much-area": "선택 범위가 화면의 너무 많은 부분을 차지해 저장하지 않았습니다.",
-      "selector-invalid": "선택 범위를 계산하지 못했습니다.",
-      "mixed-role": "서로 다른 종류의 요소가 섞여 있어 이 범위는 사용할 수 없습니다.",
+      "selector-missing": msg("safetySelectorMissing", "안정적인 가림 규칙을 만들지 못했습니다."),
+      "selector-too-long": msg("safetySelectorTooLong", "선택 범위를 특정하기에 구조가 너무 복잡합니다."),
+      "selector-too-generic": msg("safetyTooGeneric", "선택 범위가 너무 넓어 저장하지 않았습니다."),
+      "no-matches": msg("safetyNoMatches", "일치하는 요소를 찾지 못했습니다."),
+      "too-many-matches": msg("safetyTooManyMatches", "선택 범위가 너무 넓어 저장하지 않았습니다."),
+      "original-not-included": msg("safetyOriginalNotIncluded", "선택한 요소가 결과에 포함되지 않아 사용할 수 없습니다."),
+      "covers-too-much-area": msg("safetyCoversTooMuch", "선택 범위가 화면의 너무 많은 부분을 차지해 저장하지 않았습니다."),
+      "selector-invalid": msg("safetySelectorInvalid", "선택 범위를 계산하지 못했습니다."),
+      "mixed-role": msg("safetyMixedRole", "서로 다른 종류의 요소가 섞여 있어 이 범위는 사용할 수 없습니다."),
     };
-    return reasons[safety.reason] || "이 범위는 사용할 수 없습니다.";
+    return reasons[safety.reason] || msg("safetyGenericFail", "이 범위는 사용할 수 없습니다.");
   }
 
   function buildScopeButton(opts) {
@@ -1784,7 +1806,7 @@
 
     btn.setAttribute(
       "aria-label",
-      opts.label + (opts.badgeText ? ". " + opts.badgeText + " 기능" : "") + ". " + (opts.enabled ? opts.description : opts.disabledReason)
+      opts.label + (opts.badgeText ? ". " + opts.badgeText + " " + msg("proBadgeFeature", "기능") : "") + ". " + (opts.enabled ? opts.description : opts.disabledReason)
     );
 
     if (opts.enabled) {
@@ -1802,18 +1824,18 @@
     root.id = SCOPE_PICKER_ID;
     root.className = SCOPE_PICKER_CLASS;
     root.setAttribute("role", "dialog");
-    root.setAttribute("aria-label", "Cloakli 가림 범위 선택");
+    root.setAttribute("aria-label", msg("scopePickerAria", "Cloakli 가림 범위 선택"));
 
     const title = document.createElement("p");
     title.className = "cloakli-scope-picker-title";
-    title.textContent = "가림 범위를 선택하세요.";
+    title.textContent = msg("scopePickerTitle", "가림 범위를 선택하세요.");
     root.appendChild(title);
 
     // 인식된 대상(썸네일/제목/채널명/날짜·시간 등)을 사용자에게 보여준다.
     // 개발 용어나 selector는 노출하지 않는다.
     const targetLine = document.createElement("p");
     targetLine.className = "cloakli-scope-picker-target";
-    targetLine.textContent = "선택한 대상: " + state.targetLabel;
+    targetLine.textContent = msg("selectedTargetLabel", "선택한 대상: $1", [state.targetLabel]);
     root.appendChild(targetLine);
 
     const generalAvailable = !!state.generalSelector && state.generalSafety.ok;
@@ -1821,18 +1843,18 @@
 
     root.appendChild(
       buildScopeButton({
-        label: "이 요소만",
-        description: "현재 선택한 요소 하나만 가립니다.\n페이지 구조가 바뀌면 다시 적용되지 않을 수 있습니다.",
+        label: msg("scopeElementLabel", "이 요소만"),
+        description: msg("scopeElementDesc", "현재 선택한 요소 하나만 가립니다.\n페이지 구조가 바뀌면 다시 적용되지 않을 수 있습니다."),
         enabled: !!state.specificSelector,
-        disabledReason: "안정적인 가림 규칙을 만들지 못했습니다.\n다른 요소를 선택해 주세요.",
+        disabledReason: msg("scopeElementDisabled", "안정적인 가림 규칙을 만들지 못했습니다.\n다른 요소를 선택해 주세요."),
         onSelect: () => confirmScope("element"),
       })
     );
 
     root.appendChild(
       buildScopeButton({
-        label: "현재 페이지 유형의 같은 요소" + countSuffix,
-        description: "현재 페이지의 같은 역할과 같은 구조만 가립니다.",
+        label: msg("scopePageLabel", "현재 페이지 유형의 같은 요소") + countSuffix,
+        description: msg("scopePageDesc", "현재 페이지의 같은 역할과 같은 구조만 가립니다."),
         enabled: generalAvailable,
         disabledReason: describeGeneralSafetyFailure(state.generalSafety),
         badgeText: state.isPro ? null : "PRO",
@@ -1842,8 +1864,8 @@
 
     root.appendChild(
       buildScopeButton({
-        label: "이 사이트의 같은 요소" + countSuffix,
-        description: "이 사이트의 같은 역할과 같은 구조만 가립니다.",
+        label: msg("scopeSiteLabel", "이 사이트의 같은 요소") + countSuffix,
+        description: msg("scopeSiteDesc", "이 사이트의 같은 역할과 같은 구조만 가립니다."),
         enabled: generalAvailable,
         disabledReason: describeGeneralSafetyFailure(state.generalSafety),
         badgeText: state.isPro ? null : "PRO",
@@ -1854,8 +1876,8 @@
     const cancelBtn = document.createElement("button");
     cancelBtn.type = "button";
     cancelBtn.className = "cloakli-scope-picker-cancel";
-    cancelBtn.textContent = "취소";
-    cancelBtn.setAttribute("aria-label", "가림 범위 선택 취소");
+    cancelBtn.textContent = msg("scopeCancel", "취소");
+    cancelBtn.setAttribute("aria-label", msg("scopeCancelAria", "가림 범위 선택 취소"));
     cancelBtn.addEventListener("click", () => closeScopePicker());
     root.appendChild(cancelBtn);
 
@@ -1998,7 +2020,7 @@
             family: state.family,
             fingerprint: fingerprint,
           },
-          "이 요소의 가림이 저장되었습니다.",
+          msg("toastSavedElement", "이 요소의 가림이 저장되었습니다."),
           [state.visualTarget]
         );
       }
@@ -2008,7 +2030,7 @@
     const selector = state.generalSelector;
     if (!selector || !state.generalSafety.ok) {
       closeScopePicker();
-      showCloakliToast("선택 범위가 너무 넓어 저장하지 않았습니다.\n더 구체적인 요소를 선택해 주세요.", "warning");
+      showCloakliToast(msg("toastTooBroad", "선택 범위가 너무 넓어 저장하지 않았습니다.\n더 구체적인 요소를 선택해 주세요."), "warning");
       return;
     }
 
@@ -2025,8 +2047,8 @@
     const pagePattern = scope === "page" ? CloakliCore.normalizePagePattern(location.href) : null;
     const successText =
       scope === "page"
-        ? "현재 페이지 유형에 같은 요소 " + generalCount + "개가 저장되었습니다."
-        : "이 사이트의 같은 종류 요소 가림이 저장되었습니다.";
+        ? msg("toastSavedPage", "현재 페이지 유형에 같은 요소 $1개가 저장되었습니다.", [String(generalCount)])
+        : msg("toastSavedSite", "이 사이트의 같은 종류 요소 가림이 저장되었습니다.");
 
     persistRuleWithScope(
       { scope: scope, selector: selector, pagePattern: pagePattern, role: state.role, family: state.family },
@@ -2074,7 +2096,7 @@
 
     removeAllPersistentMasks();
     showCloakliToast(
-      "현재 화면의 가림을 잠시 해제했습니다.\n새로고침하거나 페이지를 이동하면 다시 적용됩니다.",
+      msg("toastClearedTemp", "현재 화면의 가림을 잠시 해제했습니다.\n새로고침하거나 페이지를 이동하면 다시 적용됩니다."),
       "info"
     );
   }
@@ -2118,7 +2140,7 @@
     applyStoredRules();
 
     if (newList.length < oldList.length) {
-      showCloakliToast("저장 규칙이 삭제되어 화면을 다시 확인했습니다.", "info");
+      showCloakliToast(msg("toastRulesResynced", "저장 규칙이 삭제되어 화면을 다시 확인했습니다."), "info");
     }
   }
 
@@ -2138,9 +2160,9 @@
 
     if (newPaused) {
       removeAllPersistentMasks();
-      showCloakliToast("이 사이트의 가림이 일시중지되었습니다.", "info");
+      showCloakliToast(msg("toastSitePaused", "이 사이트의 가림이 일시중지되었습니다."), "info");
     } else {
-      showCloakliToast("이 사이트의 가림을 다시 시작합니다.", "info");
+      showCloakliToast(msg("toastSiteResumed", "이 사이트의 가림을 다시 시작합니다."), "info");
       applyStoredRules();
     }
   }
