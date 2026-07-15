@@ -16,7 +16,8 @@ const http = require("http");
 const { execFile } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
-const OUT_DIR = path.join(ROOT, "store-assets", "screenshots");
+const LOCALE = process.argv.includes("--ko") ? "ko" : "en";
+const OUT_DIR = path.join(ROOT, "store-assets", "screenshots", LOCALE === "ko" ? "ko" : ".");
 const SCENE_DIR = path.join(ROOT, ".screenshot-scenes"); // 임시 (gitignore 대상)
 const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
@@ -29,7 +30,34 @@ const demoHtml = read("store-assets/demo/index.html");
 const demoStyle = /<style>([\s\S]*?)<\/style>/.exec(demoHtml)[1];
 const demoBody = /<body>([\s\S]*?)<\/body>/.exec(demoHtml)[1];
 
-const EN_MESSAGES = JSON.parse(read("_locales/en/messages.json"));
+const EN_MESSAGES = JSON.parse(read("_locales/" + LOCALE + "/messages.json"));
+
+// 캡션/라벨 현지화 (스토어 언어별 스크린샷용)
+const T = LOCALE === "ko" ? {
+  cap1: "화면을 공유하기 전에 민감한 정보를 가리세요",
+  cap2: "가릴 부분을 정확히 선택하세요",
+  cap3: "가림 적용 범위를 선택하세요",
+  cap4: "저장된 가림을 한곳에서 관리하세요",
+  before: "가리기 전", after: "가린 후 — Cloakli 적용",
+  s5title: "웹페이지 내용은 기기 밖으로 나가지 않습니다",
+  s5sub: "Cloakli는 로컬 우선입니다. 가림은 브라우저 안에서 그려지고 저장됩니다.",
+  s5browser: "내 브라우저", s5b1: "가림 규칙 로컬 저장", s5b2: "재방문 시 자동 재적용", s5b3: "오프라인에서도 동작",
+  s5arrow: "라이선스 확인만<br>(Pro 활성화 시에만)",
+  s5server: "Cloakli 라이선스 서버", s5v1: "Pro 라이선스 검증", s5v2: "페이지 내용은 받지 않음",
+  s5never: "<strong>어디로도 전송되지 않는 것:</strong> 페이지 텍스트, 이메일, 제목, 이미지, 화면 캡처, 방문 기록. 분석·추적 없음.",
+} : {
+  cap1: "Hide sensitive information before sharing your screen",
+  cap2: "Select exactly what you want to hide",
+  cap3: "Choose where each mask applies",
+  cap4: "Manage all your saved masks",
+  before: "Before", after: "After — with Cloakli",
+  s5title: "Your webpage content stays on your device",
+  s5sub: "Cloakli is local-first. Masks are drawn and stored in your browser.",
+  s5browser: "Your browser", s5b1: "Mask rules saved locally", s5b2: "Masks re-applied on revisit", s5b3: "Works offline",
+  s5arrow: "${T.s5arrow}",
+  s5server: "Cloakli license server", s5v1: "Verifies your Pro license", s5v2: "Receives no page content",
+  s5never: "<strong>Never sent anywhere:</strong> page text, emails, titles, images, screenshots, browsing history. No analytics, no tracking.",
+};
 
 // 장면 전용 build-config: production 모드(개발 배너/진단 패널 숨김), Developer Pro/debug OFF.
 const SCENE_BUILD_CONFIG = `(function (root) {
@@ -138,13 +166,13 @@ function buildScenes() {
   // 장면 1: Before / After 비교 (오른쪽 사본만 가리는 site 규칙 seed)
   const beforeAfterFixture = `
     <div class="split">
-      <div class="pane"><div class="pane-label">Before</div><div class="crop"><div class="mini" id="before">${demoBody}</div></div></div>
-      <div class="pane"><div class="pane-label after">After — with Cloakli</div><div class="crop"><div class="mini" id="after">${demoBody}</div></div></div>
+      <div class="pane"><div class="pane-label">${T.before}</div><div class="crop"><div class="mini" id="before">${demoBody}</div></div></div>
+      <div class="pane"><div class="pane-label after">${T.after}</div><div class="crop"><div class="mini" id="after">${demoBody}</div></div></div>
     </div>`;
   scenes.push({
     name: "screenshot-1-before-after",
     html: fixturePage({
-      caption: "Hide sensitive information before sharing your screen",
+      caption: T.cap1,
       fixtureHtml: beforeAfterFixture,
       extraCss: `
         #fixture{background:#0b0f17;display:block;zoom:1;height:740px;}
@@ -171,7 +199,7 @@ function buildScenes() {
   scenes.push({
     name: "screenshot-2-selection",
     html: fixturePage({
-      caption: "Select exactly what you want to hide",
+      caption: T.cap2,
       captionAt: "bottom",
       entitlement: PRO_ENTITLEMENT,
       scenario: `
@@ -189,7 +217,7 @@ function buildScenes() {
   scenes.push({
     name: "screenshot-3-scope",
     html: fixturePage({
-      caption: "Choose where each mask applies",
+      caption: T.cap3,
       entitlement: PRO_ENTITLEMENT,
       scenario: `
         setTimeout(async () => {
@@ -206,7 +234,7 @@ function buildScenes() {
   const optionsHtml = read("options.html").replace(
     '<script src="content-core.js"></script>',
     `<script>window.__SCENE = ${JSON.stringify({
-      caption: "Manage all your saved masks",
+      caption: T.cap4,
       storage: {
         cloakliRules: {
           "dashboard.example.com": [
@@ -242,20 +270,20 @@ function buildScenes() {
       .never{background:#131a29;border-left:4px solid #6ee7a0;border-radius:8px;padding:18px 24px;font-size:19px;color:#d7deea;}
       .never strong{color:#6ee7a0;}
     </style></head><body><div class="wrap">
-      <h1>Your webpage content stays on your device</h1>
-      <p class="sub">Cloakli is local-first. Masks are drawn and stored in your browser.</p>
+      <h1>${T.s5title}</h1>
+      <p class="sub">${T.s5sub}</p>
       <div class="diagram">
         <div class="box" style="flex:1.2">
-          <h3>Your browser</h3>
-          <ul><li>Mask rules saved locally</li><li>Masks re-applied on revisit</li><li>Works offline</li></ul>
+          <h3>${T.s5browser}</h3>
+          <ul><li>${T.s5b1}</li><li>${T.s5b2}</li><li>${T.s5b3}</li></ul>
         </div>
         <div class="arrow"><div class="line">→</div>license check only<br>(only if you activate Pro)</div>
         <div class="box" style="flex:1">
-          <h3>Cloakli license server</h3>
-          <ul><li>Verifies your Pro license</li><li>Receives no page content</li></ul>
+          <h3>${T.s5server}</h3>
+          <ul><li>${T.s5v1}</li><li>${T.s5v2}</li></ul>
         </div>
       </div>
-      <div class="never"><strong>Never sent anywhere:</strong> page text, emails, titles, images, screenshots, browsing history. No analytics, no tracking.</div>
+      <div class="never">${T.s5never}</div>
     </div></body></html>`,
   });
 
