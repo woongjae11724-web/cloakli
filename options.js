@@ -85,19 +85,101 @@ proInfoCloseBtn.addEventListener("click", () => {
   proInfoSection.hidden = true;
 });
 
-// 요금제 요약 표시는 entitlement.js(CloakliEntitlement) 하나만 사용하고, options.js는
-// 스스로 Pro 여부나 한도 숫자를 판단하지 않는다. popup.js의 배지도 같은 모듈을 사용한다.
+// ---------------------------------------------------------------------
+// 라이선스 상태의 단일 source of truth: background(GET_ENTITLEMENT).
+// options 페이지는 Pro 여부를 스스로 계산하거나 storage를 직접 읽지 않는다.
+// 응답 전에는 Free가 아니라 "확인 중"을 표시한다.
+// ---------------------------------------------------------------------
+
+// background 응답(공개 entitlement 형식). null이면 아직 확인 중이다.
+let currentEntitlement = null;
+
+function sendLicenseMessage(message) {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError || !response) {
+          resolve(null);
+          return;
+        }
+        resolve(response);
+      });
+    } catch (err) {
+      resolve(null);
+    }
+  });
+}
+
+async function refreshEntitlementFromBackground() {
+  const response = await sendLicenseMessage({ type: "GET_ENTITLEMENT" });
+  currentEntitlement = response && response.ok && response.entitlement ? response.entitlement : null;
+  renderPlanSummary(lastAllRules);
+  renderDevDiagnostics();
+}
+
+// 요금제 요약 표시. Pro 여부는 background 응답(currentEntitlement) 하나만 쓰고, 문구는
+// entitlement.js(describeOptionsPlanSummary) 하나만 사용한다 — License Pro와 Developer
+// Pro는 서로 다른 문구로 표시된다(describeOptionsPlanSummary가 source로 구분).
 function renderPlanSummary(all) {
-  const entitlementState = CloakliEntitlement.getEntitlementState();
-  const usage = CloakliEntitlement.computeUsage(all);
-  const summary = CloakliEntitlement.describeOptionsPlanSummary(entitlementState, usage);
   planEl.innerHTML = "";
+  if (!currentEntitlement) {
+    const p = document.createElement("p");
+    p.textContent = msg("planChecking", "요금제 확인 중…");
+    planEl.appendChild(p);
+    planEl.className = "cloakli-options-plan";
+    return;
+  }
+  const usage = CloakliEntitlement.computeUsage(all);
+  const summary = CloakliEntitlement.describeOptionsPlanSummary(currentEntitlement, usage);
   summary.lines.forEach((line) => {
     const p = document.createElement("p");
     p.textContent = line;
     planEl.appendChild(p);
   });
   planEl.className = summary.cssClass;
+}
+
+// ---------------------------------------------------------------------
+// 개발 빌드 전용 라이선스 진단 패널. 라이선스 키 원문/세션 토큰 원문/secret은
+// 절대 표시하지 않는다(존재 여부와 시각만). production 빌드에서는 아예 만들지 않는다.
+// 개발 전용 표기이므로 dev 배너와 동일하게 번역하지 않는다.
+// ---------------------------------------------------------------------
+async function renderDevDiagnostics() {
+  const isDevBuild =
+    typeof CloakliBuildConfig !== "undefined" && CloakliBuildConfig && CloakliBuildConfig.mode === "development";
+  if (!isDevBuild) return;
+
+  const response = await sendLicenseMessage({ type: "GET_LICENSE_DIAGNOSTICS" });
+  const d = response && response.ok ? response.diagnostics : null;
+
+  let panel = document.getElementById("cloakli-dev-diagnostics");
+  if (!panel) {
+    panel = document.createElement("section");
+    panel.id = "cloakli-dev-diagnostics";
+    panel.style.cssText = "margin-top:24px;padding:12px;border:1px dashed #b45309;border-radius:8px;font-size:12px;color:#92400e;";
+    document.body.appendChild(panel);
+  }
+  panel.innerHTML = "";
+  const title = document.createElement("p");
+  title.textContent = "[개발 빌드 진단] 라이선스 상태 (비밀값 없음)";
+  title.style.fontWeight = "700";
+  panel.appendChild(title);
+
+  const fmt = (ts) => (typeof ts === "number" && ts > 0 ? new Date(ts).toLocaleString() : "없음");
+  const lines = d
+    ? [
+        "tier: " + d.tier + " · source: " + d.source + " · status: " + d.status,
+        "session token 존재: " + (d.hasSessionToken ? "예" : "아니오"),
+        "마지막 검증: " + fmt(d.lastValidatedAt) + " · 오프라인 유예 종료: " + fmt(d.graceUntil),
+        "storage schema: v" + (d.schemaVersion || "-") + " · 확장 ID: " + (d.extensionId || "알 수 없음"),
+        "확장 버전: " + (d.extensionVersion || "-") + " · 빌드: " + (d.buildMode || "-") + " · 서버: " + (d.licenseServerHost || "-"),
+      ]
+    : ["background 응답 없음 — 서비스 워커가 응답하지 않습니다."];
+  lines.forEach((text) => {
+    const p = document.createElement("p");
+    p.textContent = text;
+    panel.appendChild(p);
+  });
 }
 
 // 가장 최근에 불러온 전체 규칙/일시중지 상태. 검색어가 바뀔 때마다 storage를 다시
@@ -496,11 +578,24 @@ searchInput.addEventListener("input", () => {
 
 // 다른 탭(웹페이지에서 새로 저장, popup에서의 일시중지 전환, 또는 다른 options 탭에서의 삭제)으로
 // 인해 규칙이나 일시중지 상태가 바뀌면 화면을 다시 그려 항상 최신 상태를 보여준다.
+// 통합 entitlement 레코드의 storage key. license-client.js의 ENTITLEMENT_STORAGE_KEY와
+// 반드시 같은 문자열이어야 한다(자동 테스트가 두 파일을 비교해 확인한다). options는
+// 이 키의 "값"을 직접 읽어 판정하지 않고, 변경 신호로만 사용해 background에 다시 묻는다.
+const ENTITLEMENT_STORAGE_KEY = "cloakli.entitlement.v1";
+
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return;
   if (!changes) return;
+  // popup에서 라이선스를 활성화/비활성화하면 이 페이지의 요금제 요약도 즉시 갱신한다.
+  // 값은 storage에서 직접 해석하지 않고 background(GET_ENTITLEMENT)에 다시 묻는다.
+  if (changes[ENTITLEMENT_STORAGE_KEY]) {
+    refreshEntitlementFromBackground();
+  }
   if (!changes[STORAGE_KEY] && !changes[PAUSED_STORAGE_KEY]) return;
   render();
 });
 
+// 규칙 목록은 즉시 그리고, 요금제 요약은 background 응답이 올 때까지 "확인 중"으로
+// 표시한다(응답 전 Free로 단정하지 않는다).
 render();
+refreshEntitlementFromBackground();

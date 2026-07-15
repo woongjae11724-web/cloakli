@@ -4,7 +4,7 @@
 // 탭을 찾아 content script를 주입하고 메시지를 보내는 로직은 popup.js와 완전히 공유하기 위해
 // tab-actions.js 하나로 분리했다(같은 로직을 두 곳에 따로 작성하지 않는다). 라이선스
 // 재검증 로직도 마찬가지로 license-client.js 하나만 사용한다.
-importScripts("content-core.js", "build-config.js", "entitlement.js", "license-client.js", "tab-actions.js");
+importScripts("content-core.js", "build-config.js", "entitlement.js", "license-client.js", "license-service.js", "tab-actions.js");
 
 const LICENSE_REVALIDATE_ALARM_NAME = "cloakli-license-revalidate";
 
@@ -63,6 +63,40 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     revalidateLicenseIfNeeded();
   }
 });
+
+// 라이선스 상태의 단일 source of truth: popup/options/content script는 아래 메시지로만
+// Pro 여부를 묻는다. 처리 로직은 license-service.js 하나에 있다(여기서는 라우팅만 한다).
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!self.CloakliLicenseService.isLicenseServiceMessage(message)) {
+    return false; // 우리 메시지가 아니면 다른 리스너/기본 처리에 맡긴다.
+  }
+  self.CloakliLicenseService.handleLicenseServiceMessage(message)
+    .then((response) => sendResponse(response))
+    .catch(() => sendResponse({ ok: false, error: "internal_error" }));
+  return true; // 비동기 응답
+});
+
+// 통합 entitlement 레코드가 바뀌면(활성화/비활성화/재검증) 서비스 워커가 살아 있는 동안
+// 인메모리 캐시도 즉시 함께 갱신해, background의 판정이 storage와 어긋나는 구간을 없앤다.
+// sessionToken은 인메모리 캐시에 넣지 않는다(공개 부분만).
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  try {
+    if (areaName !== "local" || !changes) return;
+    const recordChange = changes[self.CloakliLicenseClient.ENTITLEMENT_STORAGE_KEY];
+    if (recordChange) {
+      self.CloakliEntitlement.setLicenseEntitlement(
+        self.CloakliLicenseClient.publicEntitlementFromRecord(recordChange.newValue || null)
+      );
+    }
+  } catch (err) {
+    // 리스너 오류가 서비스 워커를 중단시키지 않게 한다.
+  }
+});
+
+// 서비스 워커는 이벤트(단축키/알람 등)로 언제든 새로 깨어난다. 그때마다 저장된 캐시를
+// 인메모리로 복구해, onInstalled/onStartup을 거치지 않은 재기동에서도 entitlement가
+// 항상 storage 기준으로 판정되게 한다.
+self.CloakliLicenseClient.primeLicenseEntitlementCache().catch(() => {});
 
 // manifest.json의 commands 이름과 정확히 일치해야 한다: start-selection, temporarily-clear-page.
 // popup.js의 버튼 클릭과 같은 메시지 이름(START_SELECTION_MODE/CLEAR_ALL_MASKS)을 사용해

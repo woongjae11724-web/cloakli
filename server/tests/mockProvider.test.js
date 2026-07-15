@@ -38,7 +38,7 @@ describe("MockLicenseProvider", () => {
   test("정의된 테스트 키 목록이 문서화된 3개와 일치한다", () => {
     assert.deepEqual(
       MOCK_TEST_KEYS.slice().sort(),
-      ["CLOAKLI-TEST-EXPIRED", "CLOAKLI-TEST-LIMIT", "CLOAKLI-TEST-PRO"].sort()
+      ["CLOAKLI-TEST-DISABLED", "CLOAKLI-TEST-EXPIRED", "CLOAKLI-TEST-INACTIVE", "CLOAKLI-TEST-LIMIT", "CLOAKLI-TEST-PRO"].sort()
     );
   });
 });

@@ -238,6 +238,8 @@ function describeLicenseError(code) {
     variant_mismatch: msg("licenseErrProductMismatch", "이 라이선스는 Cloakli Pro용이 아닙니다."),
     license_expired: msg("licenseErrExpired", "만료된 라이선스입니다."),
     license_disabled: msg("licenseErrDisabled", "비활성화된 라이선스입니다."),
+    license_not_active: msg("licenseErrNotActive", "이 라이선스는 현재 사용할 수 없는 상태입니다. 구독 상태를 확인해 주세요."),
+    storage_write_failed: msg("licenseErrStorageWrite", "활성화 상태를 저장하지 못했습니다. 브라우저 저장 공간을 확인하고 다시 시도해 주세요."),
     activation_limit_reached: msg("licenseErrActivationLimit", "이 라이선스의 기기 활성화 한도를 초과했습니다."),
     rate_limited: msg("licenseErrRateLimited", "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요."),
     too_many_attempts: msg("licenseErrTooManyAttempts", "시도 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요."),
@@ -248,29 +250,77 @@ function describeLicenseError(code) {
   return (code && map[code]) || msg("licenseErrGeneric", "라이선스 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
 }
 
+// ---------------------------------------------------------------------
+// 라이선스 상태의 단일 source of truth: background(GET_ENTITLEMENT).
+// 팝업은 Pro 여부를 스스로 계산하거나 storage를 직접 읽지 않는다 — background가
+// 저장·검증한 결과 하나만 표시한다. 응답이 오기 전에는 Free가 아니라 "확인 중"을
+// 표시한다(잠깐 Free로 보였다가 바뀌는 상태 자체를 만들지 않는다).
+// ---------------------------------------------------------------------
+
+// background 응답(공개 entitlement 형식). null이면 아직 확인 중이다.
+let currentEntitlement = null;
+
+function sendLicenseMessage(message) {
+  return new Promise((resolve) => {
+    try {
+      chrome.runtime.sendMessage(message, (response) => {
+        if (chrome.runtime.lastError || !response) {
+          resolve(null);
+          return;
+        }
+        resolve(response);
+      });
+    } catch (err) {
+      resolve(null);
+    }
+  });
+}
+
+// background에서 최신 entitlement를 받아 배지와 라이선스 섹션을 다시 그린다.
+async function refreshEntitlement() {
+  const response = await sendLicenseMessage({ type: "GET_ENTITLEMENT" });
+  currentEntitlement = response && response.ok && response.entitlement ? response.entitlement : null;
+  refreshPlanBadge();
+  renderLicenseSection();
+  return currentEntitlement;
+}
+
 // Free/License Pro/Developer Pro 세 가지 상태에 맞춰 라이선스 섹션을 다시 그린다.
 // 라이선스 키 입력 폼의 펼침/닫힘 상태는 사용자가 직접 누른 결과만 반영하고,
 // 이 함수가 임의로 닫거나 열지 않는다(Free 상태를 벗어나지 않는 한 그대로 둔다).
-async function renderLicenseSection() {
-  const entitlementState = CloakliEntitlement.getEntitlementState();
-
-  if (entitlementState.source === "developer") {
+function renderLicenseSection() {
+  const entitlement = currentEntitlement;
+  if (!entitlement) {
+    // 아직 background 응답 전: 어느 상태로도 단정하지 않는다.
     licenseFreeActionsEl.hidden = true;
     licenseInputAreaEl.hidden = true;
     licenseActiveInfoEl.hidden = true;
     return;
   }
 
-  if (CloakliEntitlement.isProUser(entitlementState)) {
+  if (entitlement.source === "developer") {
+    licenseFreeActionsEl.hidden = true;
+    licenseInputAreaEl.hidden = true;
+    licenseActiveInfoEl.hidden = true;
+    return;
+  }
+
+  if (entitlement.tier === "pro") {
     licenseFreeActionsEl.hidden = true;
     licenseInputAreaEl.hidden = true;
     licenseActiveInfoEl.hidden = false;
-    licenseStatusTextEl.textContent = entitlementState.status === "active" ? msg("licenseStatusActive", "활성") : entitlementState.status || msg("licenseStatusUnknown", "알 수 없음");
-    licenseLastCheckedEl.textContent = entitlementState.validatedAt
-      ? new Date(entitlementState.validatedAt).toLocaleString()
+    licenseStatusTextEl.textContent =
+      entitlement.status === "active"
+        ? msg("licenseStatusActive", "활성")
+        : entitlement.status === "grace"
+          ? msg("licenseStatusGrace", "활성 (오프라인 확인 유예 중)")
+          : entitlement.status || msg("licenseStatusUnknown", "알 수 없음");
+    licenseLastCheckedEl.textContent = entitlement.lastValidatedAt
+      ? new Date(entitlement.lastValidatedAt).toLocaleString()
       : msg("licenseNeverChecked", "확인된 적 없음");
-    const session = await CloakliLicenseClient.getStoredLicenseSession();
-    licenseMaskedKeyEl.textContent = CloakliLicenseClient.getMaskedLicenseKey(session) || msg("licenseStatusUnknown", "알 수 없음");
+    licenseMaskedKeyEl.textContent = entitlement.licenseDisplaySuffix
+      ? "•••• " + entitlement.licenseDisplaySuffix
+      : msg("licenseStatusUnknown", "알 수 없음");
     return;
   }
 
@@ -301,38 +351,38 @@ activateLicenseBtn.addEventListener("click", () => {
       return;
     }
     setLicenseMessage(msg("licenseChecking", "확인 중…"));
-    let result;
-    try {
-      result = await CloakliLicenseClient.activateLicense(key);
-    } catch (err) {
-      result = { ok: false, error: "activation_failed" };
-    }
+    // 활성화는 background가 원자적으로 수행한다: Worker 호출 → 응답 검증 → 저장 →
+    // 저장값 재확인 → background 판정. 아래 성공 메시지는 그 모든 단계가 끝나고
+    // background가 실제 Pro라고 응답한 경우에만 표시된다.
+    const result = await sendLicenseMessage({ type: "ACTIVATE_LICENSE", licenseKey: key });
     licenseKeyInput.value = ""; // 원문 키는 화면에도 더 남기지 않는다.
-    if (!result || !result.ok) {
+    if (!result || !result.ok || !result.entitlement || result.entitlement.tier !== "pro") {
       setLicenseMessage(describeLicenseError(result && result.error));
+      await refreshEntitlement();
       return;
     }
+    currentEntitlement = result.entitlement;
     setLicenseMessage(msg("licenseActivated", "Pro가 활성화되었습니다."));
     licenseInputAreaEl.hidden = true;
-    await refreshPlanBadge();
-    await renderLicenseSection();
+    refreshPlanBadge();
+    renderLicenseSection();
   });
 });
 
 recheckLicenseBtn.addEventListener("click", () => {
   withButtonGuard(recheckLicenseBtn, async () => {
     setLicenseMessage("");
-    let result;
-    try {
-      result = await CloakliLicenseClient.validateLicense();
-    } catch (err) {
-      result = { ok: false, error: "network_error" };
-    }
+    const result = await sendLicenseMessage({ type: "RECHECK_LICENSE" });
     if (!result || (!result.ok && !result.offline)) {
       setLicenseMessage(describeLicenseError(result && result.error));
     }
-    await refreshPlanBadge();
-    await renderLicenseSection();
+    if (result && result.entitlement) {
+      currentEntitlement = result.entitlement;
+      refreshPlanBadge();
+      renderLicenseSection();
+    } else {
+      await refreshEntitlement();
+    }
   });
 });
 
@@ -340,28 +390,33 @@ deactivateLicenseBtn.addEventListener("click", () => {
   withButtonGuard(deactivateLicenseBtn, async () => {
     const confirmed = typeof window !== "undefined" && window.confirm ? window.confirm(msg("licenseDeactivateConfirm", "이 기기에서 Pro 라이선스를 비활성화하시겠습니까?")) : true;
     if (!confirmed) return;
-    try {
-      await CloakliLicenseClient.deactivateLicense();
-    } catch (err) {
-      // 서버 호출 실패 여부와 무관하게 로컬 세션은 이미 정리된다(license-client.js 참고).
-    }
+    const result = await sendLicenseMessage({ type: "DEACTIVATE_LICENSE" });
     setLicenseMessage("");
-    await refreshPlanBadge();
-    await renderLicenseSection();
+    if (result && result.entitlement) {
+      currentEntitlement = result.entitlement;
+      refreshPlanBadge();
+      renderLicenseSection();
+    } else {
+      await refreshEntitlement();
+    }
   });
 });
 
 // 요금제 배지는 특정 탭이 아니라 전체 저장 규칙을 기준으로 하므로, 현재 사이트 상태와
-// 별도로 갱신한다. 배지 문구/판단은 entitlement.js(CloakliEntitlement) 하나만 사용하고
-// popup.js는 스스로 Pro 여부나 문구를 판단하지 않는다.
+// 별도로 갱신한다. Pro 여부는 background 응답(currentEntitlement) 하나만 쓰고, 문구는
+// entitlement.js(describePopupPlanBadge) 하나만 사용한다 — popup.js는 스스로 판단하지 않는다.
 function refreshPlanBadge() {
+  if (!currentEntitlement) {
+    planBadgeEl.textContent = msg("planChecking", "요금제 확인 중…");
+    planBadgeEl.className = "cloakli-plan-badge";
+    return;
+  }
   try {
     chrome.storage.local.get([STORAGE_KEY], (result) => {
       if (chrome.runtime.lastError) return;
       const allRules = (result && result[STORAGE_KEY]) || {};
-      const entitlementState = CloakliEntitlement.getEntitlementState();
       const usage = CloakliEntitlement.computeUsage(allRules);
-      const badge = CloakliEntitlement.describePopupPlanBadge(entitlementState, usage);
+      const badge = CloakliEntitlement.describePopupPlanBadge(currentEntitlement, usage);
       planBadgeEl.textContent = badge.text;
       planBadgeEl.className = badge.cssClass;
     });
@@ -560,11 +615,9 @@ checkOnboarding();
 refreshStatus();
 renderDevBadge();
 
-// 라이선스 캐시를 먼저 채운 뒤에 배지/라이선스 섹션을 그려야 License Pro 상태가
-// 팝업을 열 때마다 잠깐 Free로 보였다가 바뀌는 깜빡임을 피할 수 있다.
-CloakliLicenseClient.primeLicenseEntitlementCache()
-  .catch(() => {})
-  .then(() => {
-    refreshPlanBadge();
-    renderLicenseSection();
-  });
+// 응답이 오기 전까지는 Free가 아니라 "요금제 확인 중…"을 표시한다. Pro 여부는
+// background(GET_ENTITLEMENT) 하나만 신뢰하며, 팝업을 닫아도 아무것도 지우지 않는다 —
+// 저장된 entitlement는 background만 쓰고 지운다.
+refreshPlanBadge();
+renderLicenseSection();
+refreshEntitlement();

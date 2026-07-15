@@ -141,6 +141,61 @@ describe("저장소 key 일치 (content.js / popup.js / options.js)", () => {
   });
 });
 
+// License Pro의 단일 source of truth 배선을 잠근다: background(license-service)만 storage
+// 레코드를 쓰고, popup/options는 GET_ENTITLEMENT 메시지로만 묻고, content/background는
+// storage에서 prime + 통합 레코드 변경을 구독한다. 이 배선이 무너지면 화면마다 서로 다른
+// Pro 상태가 표시되는 회귀(출시 전 안정화에서 고침)가 재발한다.
+describe("License entitlement 배선 (단일 source of truth)", () => {
+  test("popup.js와 options.js는 GET_ENTITLEMENT 메시지로만 Pro 상태를 얻고, license-client를 직접 호출하지 않는다", () => {
+    ["popup.js", "options.js"].forEach((file) => {
+      const src = read(file);
+      assert.match(src, /GET_ENTITLEMENT/, `${file}은 background에 GET_ENTITLEMENT를 보내야 한다`);
+      assert.ok(!/CloakliLicenseClient\./.test(src), `${file}이 license-client를 직접 호출하면 안 된다`);
+      assert.ok(!/getEntitlementState\s*\(/.test(src), `${file}이 로컬 캐시로 Pro를 판정하면 안 된다`);
+    });
+  });
+
+  test("popup.js는 활성화/재확인/비활성화를 background 메시지로만 수행한다", () => {
+    const src = read("popup.js");
+    ["ACTIVATE_LICENSE", "RECHECK_LICENSE", "DEACTIVATE_LICENSE"].forEach((type) => {
+      assert.match(src, new RegExp(type), `popup.js는 ${type} 메시지를 사용해야 한다`);
+    });
+  });
+
+  test("content.js와 background.js는 시작 시 prime하고, 통합 레코드(ENTITLEMENT_STORAGE_KEY) 변경을 구독한다", () => {
+    ["content.js", "background.js"].forEach((file) => {
+      const src = read(file);
+      assert.match(src, /primeLicenseEntitlementCache\s*\(\)/, `${file}은 시작 시 라이선스 캐시를 prime해야 한다`);
+      assert.match(src, /ENTITLEMENT_STORAGE_KEY/, `${file}은 storage.onChanged에서 통합 레코드 변경을 처리해야 한다`);
+      assert.match(src, /setLicenseEntitlement/, `${file}은 변경된 레코드를 setLicenseEntitlement로 반영해야 한다`);
+    });
+  });
+
+  test("content.js는 Pro 범위 기능 직전에 background(GET_ENTITLEMENT)에 묻는다", () => {
+    const src = read("content.js");
+    assert.match(src, /GET_ENTITLEMENT/, "content.js는 저장/범위 표시 직전에 background에 물어야 한다");
+  });
+
+  test("options.js가 참조하는 통합 레코드 키 문자열이 license-client.js의 상수와 일치한다", () => {
+    const clientSrc = read("license-client.js");
+    const optionsSrc = read("options.js");
+    const m = /ENTITLEMENT_STORAGE_KEY\s*=\s*"([^"]+)"/.exec(clientSrc);
+    assert.ok(m, "license-client.js에 ENTITLEMENT_STORAGE_KEY 정의가 있어야 한다");
+    assert.ok(optionsSrc.includes('"' + m[1] + '"'), "options.js의 키 문자열이 license-client.js와 같아야 한다");
+  });
+
+  test("어느 컨텍스트도 entitlement.js 밖에서 스스로 Pro 여부를 판단하지 않는다 (plan/tier 문자열 하드코딩 금지)", () => {
+    ["popup.js", "options.js", "content.js", "background.js"].forEach((file) => {
+      const src = read(file);
+      assert.ok(!/plan\s*===?\s*["']pro["']/.test(src), `${file}이 plan 문자열을 직접 비교하면 안 된다`);
+      assert.ok(!/isPro\s*[:=]\s*true/.test(src), `${file}이 isPro를 직접 만들어내면 안 된다`);
+    });
+    // 예외: popup.js는 background 응답(공개 형식)의 tier를 "표시 분기"에만 사용한다.
+    // 저장/기능 제한 판단에 쓰는 canCreateRule은 content.js에서 background 응답을 그대로
+    // entitlement.js로 넘긴다(위 테스트에서 확인).
+  });
+});
+
 describe("키보드 단축키(commands)와 background.js 처리 일치", () => {
   test("manifest의 명령 이름과 background.js가 처리하는 이름이 정확히 같다", () => {
     const manifest = JSON.parse(read("manifest.json"));

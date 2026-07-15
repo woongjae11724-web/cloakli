@@ -1,48 +1,113 @@
-# Chrome Web Store 개인정보 공개(Privacy practices) 작성 답안
+# Chrome Web Store — Privacy practices 제출 답안 (최종)
 
-개발자 대시보드 → Privacy practices 탭에 그대로 옮겨 적는다. 코드의 실제 동작과 일치한다.
+대시보드 → 항목 → **Privacy practices** 탭에 아래 답안을 그대로 입력한다.
+모든 답안은 실제 코드 감사 결과와 일치한다(외부 통신은 `license-client.js`의 라이선스
+서버 fetch 단 1곳, analytics/tracking 없음 — `tests/website.test.js`와 secret scan이 검증).
 
-## Single purpose (단일 목적)
+---
 
-> Cloakli lets users visually mask selected parts of web pages before sharing or recording their screen, and re-applies those masks when they revisit the site.
+## 1. Single purpose (단일 목적 — 그대로 붙여넣기)
 
-## 권한별 정당화 (Permission justification)
+```
+Cloakli allows users to visually hide selected information on webpages before
+screen sharing, recording, presenting, or taking screenshots. Saved masks are
+re-applied automatically when the user revisits the site.
+```
 
-- **activeTab**: Used only when the user clicks "Select an area to hide" in the popup, to start selection mode on the current tab.
-- **scripting**: Used to inject the content script into tabs that were already open before the extension was installed, so saved masks can apply without a page reload.
-- **storage**: Stores the user's saved mask rules, per-site pause state, an anonymous installation ID, and (for Pro users) a license session token and cached plan status locally in chrome.storage.local.
-- **alarms**: Schedules periodic background re-validation of an activated Pro license.
-- **Host access (http/https all sites)**: The core feature is automatically re-applying the user's saved masks when they revisit a site. The content script only draws overlays for URLs that match the user's own saved rules; it does not read, collect, or transmit page content.
+저장된 가림 규칙, 재방문 시 재적용, 페이지 유형·사이트 범위, 사이트 일시중지, 규칙 관리,
+라이선스 검증(Free·Pro 제한)은 모두 이 단일 목적을 지원하는 부가 기능으로 설명한다.
+라이선스 판매 자체를 목적으로 쓰지 않는다.
 
-## Data usage 질문 답안
+## 2. Permission justifications (권한별 사용 이유 — 각 입력란에 붙여넣기)
 
-Chrome 스토어의 "Does your extension collect or use..." 체크리스트:
+**activeTab**
+```
+Used only after the user explicitly starts selection mode from the popup, so
+Cloakli can identify and visually cover the content the user selects on the
+currently active page.
+```
 
-| 항목 | 답 | 비고 |
+**scripting**
+```
+Used to inject Cloakli's selection and masking logic into tabs that were
+already open before the extension was installed, so the user does not need to
+reload every page. No code is executed on a page until the user interacts
+with Cloakli.
+```
+
+**storage**
+```
+Used to save the user's masking rules, per-site pause preferences, onboarding
+state, a random installation ID, and the verified subscription entitlement
+(session token, never the license key itself) locally in the user's browser
+via chrome.storage.local. Nothing is synced or sent to any analytics service.
+```
+
+**alarms**
+```
+Used to periodically re-validate an activated Pro license in the background
+(once per day). No alarms are used for tracking or data collection.
+```
+
+**Host permissions (content script on http://*/* and https://*/*)**
+```
+Cloakli's core feature is automatically re-applying the masks the user saved
+when they revisit a website. This requires the content script to run on
+regular webpages so saved masks appear without any extra clicks. The content
+script only draws visual overlays for elements matching the user's own saved
+rules; it does not read, collect, or transmit page content, and it cannot run
+on chrome:// pages or the Chrome Web Store (this limitation is disclosed to
+users).
+```
+
+## 3. Remote code
+
+**답: No, I am not using remote code.**
+
+```
+All JavaScript is packaged inside the extension. Cloakli does not load remote
+scripts, does not use eval or WebAssembly, and does not download or execute
+any code at runtime. The only network communication is JSON API calls to
+Cloakli's own license verification server.
+```
+
+## 4. Data usage (수집 데이터 유형 체크리스트 — 코드 감사 결과 기준)
+
+| 대시보드 항목 | 체크 | 근거 (실제 코드) |
 |---|---|---|
-| Personally identifiable information | No | 이름/이메일/주소 수집 안 함 |
-| Health information | No | |
-| Financial and payment information | No | 결제는 Lemon Squeezy 웹사이트에서 진행, 확장은 카드 정보를 다루지 않음 |
-| Authentication information | **Yes** | 사용자가 직접 입력한 라이선스 키 — 키는 SHA-256 해시로만 서버 전송, 원문은 저장하지 않음. 이후 통신은 세션 토큰 사용 |
-| Personal communications | No | |
-| Location | No | |
-| Web history | No | 방문 기록을 수집·전송하지 않음. 가림 규칙의 hostname은 로컬에만 저장 |
-| User activity | No | 클릭/스크롤 추적 없음, 분석 도구 없음 |
-| Website content | No | 페이지 내용을 수집·전송하지 않음. 가림 대상 식별자(선택자/해시된 링크 식별자)는 로컬에만 저장 |
+| Personally identifiable information | **아니오** | 이름/이메일/주소를 수집하지 않음 |
+| Health information | 아니오 | — |
+| Financial and payment information | 아니오 | 결제는 Lemon Squeezy 웹사이트에서 진행. 확장은 카드 정보를 다루지 않음 |
+| **Authentication information** | **예** | 사용자가 직접 입력한 라이선스 키를 활성화 요청 1회에 전송(저장하지 않음). 이후에는 서버가 발급한 세션 토큰만 사용 |
+| Personal communications | 아니오 | — |
+| Location | 아니오 | IP 기반 위치 수집 없음(요청 자체의 IP는 Cloudflare 인프라 로그에 남을 수 있음 — privacy policy에 공개) |
+| Web history | 아니오 | 방문 기록을 수집·전송하지 않음. 가림 규칙의 hostname은 로컬에만 저장 |
+| User activity | 아니오 | 클릭/스크롤 추적, 분석 도구 없음 |
+| Website content | 아니오 | 페이지 본문/선택 텍스트/이메일/영상 제목/이미지/캡처를 전송하지 않음. 가림 대상 식별자(CSS selector, 해시된 링크 식별자)는 로컬에만 저장 |
 
-체크 후 하단 certification 3개 항목(제3자 판매 안 함, 단일 목적 외 사용·전송 안 함, 신용도 판단 목적 사용 안 함) 모두 체크 가능 — 실제로 해당 사항 없음.
+**라이선스 검증 시 서버로 전송되는 것 (숨기지 않고 공개):** 라이선스 키(활성화 1회, 서버는
+SHA-256 해시만 저장), 무작위 설치 ID, 확장 프로그램 버전, 세션 토큰, 요청 메타데이터
+(시각·IP는 Cloudflare 인프라 차원). **전송되지 않는 것:** 웹페이지 본문, 사용자가 가린
+실제 내용, 방문 기록, 화면 캡처.
 
-## Remote code
+## 5. Certifications (하단 인증 3종 — 감사 결과 모두 진술 가능)
 
-> **No, I am not using remote code.** All JavaScript is packaged in the extension. No CDN scripts, no eval, no dynamically fetched code.
+- [x] 사용자 데이터를 제3자에게 판매하지 않음 — 판매 코드/계약 없음
+- [x] 단일 목적과 무관한 용도로 사용·전송하지 않음 — 외부 통신이 라이선스 검증 1종뿐
+- [x] 신용도 판단·대출 등에 사용하지 않음 — 해당 데이터 자체가 없음
 
-## 외부 통신 (참고)
+(광고 목적 사용 없음, 사람이 읽기 위한 사용자 콘텐츠 전송 없음 — 위 감사와 동일 근거)
 
-라이선스 서버 `https://cloakli-license.mycloakli.workers.dev` 한 곳. 사용자가 라이선스 키를 입력해 Pro를 활성화한 경우에만:
-- 라이선스 키의 SHA-256 해시(원문 아님), 설치 ID, 확장 버전 전송
-- 이후 재검증은 세션 토큰으로 수행
-- Free 사용자는 어떤 외부 요청도 발생하지 않음
+## 6. Privacy policy URL
 
-## Privacy policy URL
+```
+https://cloakli.pages.dev/privacy/
+```
 
-Pages 배포 후: `https://cloakli.pages.dev/privacy/` (커스텀 도메인 연결 시 그 주소로 교체)
+## 참고: 코드 감사 요약 (제출 전 재검증 방법)
+
+- 외부 통신 전수 검색: `grep -n "fetch(\|XMLHttpRequest\|WebSocket\|sendBeacon" *.js`
+  → `license-client.js`의 라이선스 서버 호출 1곳만 존재해야 한다.
+- 외부 도메인: `cloakli-license.mycloakli.workers.dev`(라이선스 API),
+  `mycloakli.lemonsqueezy.com`(구매 버튼이 새 탭으로 여는 결제 페이지 — 데이터 전송 아님).
+- analytics/tracking/sentry/posthog 문자열: 0건 (`npm test`의 website/store 검사가 강제).

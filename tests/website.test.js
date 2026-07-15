@@ -163,8 +163,8 @@ test("store-assets: 필수 문서가 존재하고 짧은 설명이 규격(132자
   for (const file of ["en/listing.md", "ko/listing.md", "PERMISSIONS.md", "PRIVACY-DISCLOSURE.md", "STORE-SUBMISSION.md", "SCREENSHOTS.md", "demo/index.html"]) {
     assert.ok(fs.existsSync(path.join(STORE, file)), `누락: store-assets/${file}`);
   }
-  const shortEn = "Hide sensitive information on websites before sharing your screen.";
-  const shortKo = "화면 공유 전에 웹페이지의 민감한 정보를 간편하게 가립니다.";
+  const shortEn = "Hide sensitive information on webpages before sharing your screen.";
+  const shortKo = "화면 공유 전에 웹페이지에서 민감한 정보를 간편하게 가립니다.";
   assert.ok(read("store-assets/en/listing.md").includes(shortEn));
   assert.ok(read("store-assets/ko/listing.md").includes(shortKo));
   assert.ok(shortEn.length <= 132 && shortKo.length <= 132);

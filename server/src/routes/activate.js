@@ -8,8 +8,18 @@ import { sha256Hex, generateSessionToken } from "../utils/hash.js";
 import { createLicenseProvider } from "../services/licenseProviders/index.js";
 import { getRepo } from "../services/repoAccess.js";
 import { checkRateLimit } from "../services/rateLimit.js";
-import { buildEntitlementResponse } from "../services/entitlement.js";
-import { RATE_LIMITS } from "../utils/constants.js";
+import { buildEntitlementResponse, isLicenseCurrentlyActive } from "../services/entitlement.js";
+import { RATE_LIMITS, LICENSE_STATUS } from "../utils/constants.js";
+
+// 현재 active가 아닌 라이선스의 상태를 활성화 거부 오류 코드로 옮긴다. 확장 프로그램
+// popup이 이 코드를 사용자 문구로 변환한다(내부 사정은 노출하지 않는다).
+function describeInactiveLicenseError(license) {
+  if (!license) return "license_not_active";
+  if (license.status === LICENSE_STATUS.EXPIRED) return "license_expired";
+  if (license.status === LICENSE_STATUS.DISABLED) return "license_disabled";
+  if (license.expires_at && license.expires_at <= Date.now()) return "license_expired";
+  return "license_not_active";
+}
 
 export async function handleActivate(request, env) {
   const body = await parseJsonSafely(request);
@@ -75,6 +85,13 @@ export async function handleActivate(request, env) {
     activationLimit: typeof data.activationLimit === "number" ? data.activationLimit : 1,
     expiresAt: data.expiresAt || null,
   });
+
+  // 현재 유효(active, 미만료)하지 않은 라이선스에는 세션 토큰을 발급하지 않는다.
+  // 여기서 ok:true를 돌려주면 확장 프로그램이 "Pro 활성화 성공"으로 표시한 뒤 실제
+  // entitlement는 free가 되는 모순이 생긴다 — 반드시 명확한 오류로 거부한다.
+  if (!isLicenseCurrentlyActive(license, now)) {
+    return jsonResponse({ ok: false, error: describeInactiveLicenseError(license) }, 400);
+  }
 
   const existingInstance = await repo.findInstance({ licenseId: license.id, installationIdHash });
   const isReactivation = !!(existingInstance && existingInstance.deactivated_at);

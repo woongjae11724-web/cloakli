@@ -4,6 +4,8 @@
 const TEST_KEYS = {
   "CLOAKLI-TEST-PRO": { status: "active", activationLimit: 5, expiresAt: null },
   "CLOAKLI-TEST-EXPIRED": { status: "expired", activationLimit: 5, expiresAt: Date.now() - 1000 * 60 * 60 },
+  "CLOAKLI-TEST-INACTIVE": { status: "inactive", activationLimit: 5, expiresAt: null },
+  "CLOAKLI-TEST-DISABLED": { status: "disabled", activationLimit: 5, expiresAt: null },
   "CLOAKLI-TEST-LIMIT": { status: "active", activationLimit: 1, expiresAt: null },
 };
 

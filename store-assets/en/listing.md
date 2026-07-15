@@ -6,7 +6,7 @@ Cloakli
 
 ## Short description (132 chars max)
 
-Hide sensitive information on websites before sharing your screen.
+Hide sensitive information on webpages before sharing your screen.
 
 ## Detailed description
 

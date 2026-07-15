@@ -194,6 +194,21 @@
   "licenseErrExpired": {
     "message": "만료된 라이선스입니다."
   },
+  "scopeMatchCount": {
+    "message": "($1개)"
+  },
+  "planChecking": {
+    "message": "요금제 확인 중…"
+  },
+  "licenseStatusGrace": {
+    "message": "활성 (오프라인 확인 유예 중)"
+  },
+  "licenseErrNotActive": {
+    "message": "이 라이선스는 현재 사용할 수 없는 상태입니다. 구독 상태를 확인해 주세요."
+  },
+  "licenseErrStorageWrite": {
+    "message": "활성화 상태를 저장하지 못했습니다. 브라우저 저장 공간을 확인하고 다시 시도해 주세요."
+  },
   "licenseErrDisabled": {
     "message": "비활성화된 라이선스입니다."
   },

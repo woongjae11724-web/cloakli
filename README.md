@@ -321,7 +321,7 @@ popup과 options 페이지의 `Pro 알아보기` 버튼을 누르면, 같은 화
 | `server/src/routes/deactivate.js` | `POST /v1/license/deactivate` — **이 기기의 인스턴스만** 비활성화. |
 | `server/src/routes/webhook.js` | `POST /v1/webhooks/lemonsqueezy` — 서명 검증(파싱 전) → 중복 처리 방지 → D1 갱신. |
 | `server/src/routes/admin.js` | `GET /v1/admin/license-summary` — 관리자 시크릿이 있을 때만, 집계 수치만(활성/비활성 라이선스 수 등) 반환. 개별 라이선스 키/이메일/설치 ID는 절대 반환하지 않음. |
-| `server/src/services/licenseProviders/` | `LemonSqueezyLicenseProvider`(실제 API 호출)와 `MockLicenseProvider`(개발/테스트 전용, 고정 키 `CLOAKLI-TEST-PRO`/`CLOAKLI-TEST-EXPIRED`/`CLOAKLI-TEST-LIMIT`)를 같은 인터페이스로 추상화. `LICENSE_PROVIDER=mock`이면서 `ENVIRONMENT=production`이면 서버가 요청 처리 시점에 즉시 에러를 던지도록 코드로 강제됩니다. |
+| `server/src/services/licenseProviders/` | `LemonSqueezyLicenseProvider`(실제 API 호출)와 `MockLicenseProvider`(개발/테스트 전용, 고정 키 `CLOAKLI-TEST-PRO`/`CLOAKLI-TEST-EXPIRED`/`CLOAKLI-TEST-INACTIVE`/`CLOAKLI-TEST-DISABLED`/`CLOAKLI-TEST-LIMIT`)를 같은 인터페이스로 추상화. `LICENSE_PROVIDER=mock`이면서 `ENVIRONMENT=production`이면 서버가 요청 처리 시점에 즉시 에러를 던지도록 코드로 강제됩니다. |
 | `server/src/services/d1Repository.js` / `tests/helpers/memory-repository.js` | 같은 `LicenseRepository` 인터페이스의 두 구현. 자동 테스트는 메모리 구현으로 실행되며(D1/Miniflare 없이도 빠르고 결정적), 실제 D1 구현은 이 저장소 환경에서 자동 테스트로 검증되지 않았음을 명시합니다(실 배포 후 수동 확인 필요). |
 | `server/migrations/0001_init.sql` | D1 스키마: `licenses`, `license_instances`, `webhook_events`, `rate_limit_events`. |
 

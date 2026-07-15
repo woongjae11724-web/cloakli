@@ -36,7 +36,7 @@
 
   // 라이선스 서버(server/)가 응답한 entitlement를 이 컨텍스트(content script/popup/
   // background 각각 별도 실행 컨텍스트) 안에서만 기억해 두는 캐시. license-client.js가
-  // chrome.storage.local의 cloakliLicenseCache를 읽어 여기에 넣어 준다 — entitlement.js
+  // chrome.storage.local의 통합 레코드(cloakli.entitlement.v1)의 공개 부분을 읽어 여기에 넣어 준다 — entitlement.js
   // 자신은 절대 chrome.storage나 네트워크를 직접 건드리지 않는다(순수 판정 로직 유지).
   let cachedLicenseEntitlement = null;
 
@@ -48,25 +48,32 @@
     return cachedLicenseEntitlement;
   }
 
-  // 라이선스 캐시가 "지금(now) 시점에" 여전히 유효한지 판단하는 순수 함수. status가
-  // active가 아니거나(만료/취소/비활성화가 이미 서버에서 반영된 경우) 오프라인 유예
-  // 기한(offlineValidUntil)이 지났으면 더 이상 Pro로 취급하지 않는다.
+  // 라이선스 캐시(통합 레코드 v1의 공개 부분)가 "지금(now) 시점에" 여전히 유효한지
+  // 판단하는 순수 함수. 스키마가 다르거나(손상/알 수 없는 버전) status가 active가
+  // 아니거나(만료/취소/비활성화) 오프라인 유예 기한(graceUntil)이 지났으면 더 이상
+  // Pro로 취급하지 않는다 — 손상된 값은 항상 안전하게 free다.
   function isLicenseEntitlementCurrentlyValid(state, now) {
     const t = typeof now === "number" ? now : Date.now();
-    if (!state || state.isPro !== true) return false;
-    if (state.status && state.status !== "active") return false;
-    if (typeof state.offlineValidUntil !== "number") return false;
-    return t <= state.offlineValidUntil;
+    if (!state || state.schemaVersion !== 1) return false;
+    if (state.tier !== "pro") return false;
+    if (state.status !== "active") return false;
+    if (typeof state.graceUntil !== "number") return false;
+    return t <= state.graceUntil;
   }
+
+  // "active"(최근 검증됨)와 "grace"(검증이 오래됐지만 유예 기간 안)를 가르는 기준.
+  // 백그라운드 재검증 주기(24시간)의 2배로 두어, 재검증 한 번을 놓쳐도 곧바로
+  // grace로 표시하지는 않는다. (license-client.js의 LICENSE_REVALIDATE_INTERVAL_MS 참고)
+  const LICENSE_FRESH_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
 
   // developerMode 값만 받는 순수 함수로 분리해, 실제 build-config.js 값을 건드리지
   // 않고도 "개발자 모드 켜짐/꺼짐" 두 경우를 각각 테스트할 수 있게 한다.
   // developerMode가 true가 아닌 모든 값(false/undefined/null/손상된 값)은 안전하게 free로 처리한다.
   function resolveEntitlementState(developerMode) {
     if (developerMode === true) {
-      return { plan: "pro", source: "developer", isPro: true };
+      return { plan: "pro", tier: "pro", source: "developer", isPro: true };
     }
-    return { plan: "free", source: "default", isPro: false };
+    return { plan: "free", tier: "free", source: "default", isPro: false };
   }
 
   // 실제 제품 코드가 호출하는 단일 진입점. 우선순위는 항상 다음과 같다:
@@ -86,21 +93,64 @@
     if (isLicenseEntitlementCurrentlyValid(cachedLicenseEntitlement)) {
       return {
         plan: "pro",
+        tier: "pro",
         source: "license_server",
         isPro: true,
         status: cachedLicenseEntitlement.status,
         expiresAt: cachedLicenseEntitlement.expiresAt != null ? cachedLicenseEntitlement.expiresAt : null,
-        validatedAt: cachedLicenseEntitlement.validatedAt,
-        offlineValidUntil: cachedLicenseEntitlement.offlineValidUntil,
+        lastValidatedAt: cachedLicenseEntitlement.lastValidatedAt,
+        graceUntil: cachedLicenseEntitlement.graceUntil,
+        licenseDisplaySuffix: cachedLicenseEntitlement.licenseDisplaySuffix || null,
       };
     }
 
     return resolveEntitlementState(false);
   }
 
+  // background가 GET_ENTITLEMENT 메시지에 돌려주는 "공개 응답 형식". popup/options/
+  // content script는 전부 이 하나의 형식으로 Pro 여부를 판단하며, 원본 라이선스 키와
+  // session token은 절대 포함되지 않는다.
+  //   { tier, source: "license"|"developer"|"free", status: "active"|"grace"|"expired"|
+  //     "invalid"|"none", expiresAt, lastValidatedAt, licenseDisplaySuffix }
+  function toPublicEntitlement(now) {
+    const t = typeof now === "number" ? now : Date.now();
+    const developerMode =
+      typeof CloakliBuildConfig !== "undefined" && CloakliBuildConfig && CloakliBuildConfig.developerPro === true;
+    if (developerMode) {
+      return { tier: "pro", source: "developer", status: "active", expiresAt: null, lastValidatedAt: null, licenseDisplaySuffix: null };
+    }
+
+    const cached = cachedLicenseEntitlement;
+    if (!cached) {
+      return { tier: "free", source: "free", status: "none", expiresAt: null, lastValidatedAt: null, licenseDisplaySuffix: null };
+    }
+    if (isLicenseEntitlementCurrentlyValid(cached, t)) {
+      const fresh = typeof cached.lastValidatedAt === "number" && t - cached.lastValidatedAt <= LICENSE_FRESH_WINDOW_MS;
+      return {
+        tier: "pro",
+        source: "license",
+        status: fresh ? "active" : "grace",
+        expiresAt: cached.expiresAt != null ? cached.expiresAt : null,
+        lastValidatedAt: cached.lastValidatedAt != null ? cached.lastValidatedAt : null,
+        licenseDisplaySuffix: cached.licenseDisplaySuffix || null,
+      };
+    }
+    // 캐시는 있지만 Pro가 아님: 구조가 손상됐으면 invalid, 아니면(만료/유예 종료) expired.
+    const damaged = cached.schemaVersion !== 1 || (cached.tier !== "pro" && cached.tier !== "free");
+    return {
+      tier: "free",
+      source: damaged ? "free" : "license",
+      status: damaged ? "invalid" : "expired",
+      expiresAt: cached.expiresAt != null ? cached.expiresAt : null,
+      lastValidatedAt: cached.lastValidatedAt != null ? cached.lastValidatedAt : null,
+      licenseDisplaySuffix: null,
+    };
+  }
+
   // 손상된 값(null/undefined/문자열 "true" 등)이 들어와도 항상 안전하게 false를 돌려준다.
+  // 내부 상태(isPro)와 공개 응답 형식(tier) 어느 쪽이 들어와도 같은 결과를 준다.
   function isProUser(state) {
-    return !!(state && state.isPro === true);
+    return !!(state && (state.isPro === true || state.tier === "pro"));
   }
 
   // hostname/selector가 없는 손상된 규칙, 배열이 아닌 값(Cloakli 규칙이 아닌 다른 storage
@@ -262,6 +312,7 @@
     FREE_PLAN_LIMITS,
     resolveEntitlementState,
     getEntitlementState,
+    toPublicEntitlement,
     isProUser,
     computeUsage,
     canCreateRule,

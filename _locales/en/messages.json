@@ -197,6 +197,21 @@
   "licenseErrDisabled": {
     "message": "This license has been disabled."
   },
+  "scopeMatchCount": {
+    "message": "($1 matched)"
+  },
+  "planChecking": {
+    "message": "Checking plan…"
+  },
+  "licenseStatusGrace": {
+    "message": "Active (offline verification grace)"
+  },
+  "licenseErrNotActive": {
+    "message": "This license is not currently usable. Please check your subscription status."
+  },
+  "licenseErrStorageWrite": {
+    "message": "Could not save the activation. Please check your browser storage and try again."
+  },
   "licenseErrActivationLimit": {
     "message": "This license has reached its device activation limit."
   },

@@ -40,15 +40,75 @@ describe("POST /v1/license/activate", () => {
     assert.equal(body.entitlement.isPro, true);
   });
 
-  test("만료된 테스트 키(CLOAKLI-TEST-EXPIRED)는 활성화되지만 entitlement는 free다", async () => {
+  test("만료된 키(CLOAKLI-TEST-EXPIRED)는 세션 토큰 없이 400 license_expired로 거부된다", async () => {
     const env = createTestEnv();
     const res = await worker.fetch(
       makeRequest("/v1/license/activate", { method: "POST", body: activateBody({ licenseKey: "CLOAKLI-TEST-EXPIRED" }) }),
       env
     );
     const body = await res.json();
-    assert.equal(res.status, 200);
-    assert.equal(body.entitlement.isPro, false);
+    assert.equal(res.status, 400);
+    assert.equal(body.ok, false);
+    assert.equal(body.error, "license_expired");
+    assert.equal(body.sessionToken, undefined, "유효하지 않은 라이선스에 세션 토큰을 발급하면 안 된다");
+  });
+
+  test("inactive 키(CLOAKLI-TEST-INACTIVE)는 400 license_not_active로 거부된다", async () => {
+    const env = createTestEnv();
+    const res = await worker.fetch(
+      makeRequest("/v1/license/activate", { method: "POST", body: activateBody({ licenseKey: "CLOAKLI-TEST-INACTIVE" }) }),
+      env
+    );
+    const body = await res.json();
+    assert.equal(res.status, 400);
+    assert.equal(body.error, "license_not_active");
+    assert.equal(body.sessionToken, undefined);
+  });
+
+  test("disabled 키(CLOAKLI-TEST-DISABLED)는 400 license_disabled로 거부된다", async () => {
+    const env = createTestEnv();
+    const res = await worker.fetch(
+      makeRequest("/v1/license/activate", { method: "POST", body: activateBody({ licenseKey: "CLOAKLI-TEST-DISABLED" }) }),
+      env
+    );
+    const body = await res.json();
+    assert.equal(res.status, 400);
+    assert.equal(body.error, "license_disabled");
+    assert.equal(body.sessionToken, undefined);
+  });
+
+  test("비활성 라이선스 활성화 거부는 기기 슬롯(instance)을 만들지 않는다", async () => {
+    const env = createTestEnv();
+    await worker.fetch(
+      makeRequest("/v1/license/activate", { method: "POST", body: activateBody({ licenseKey: "CLOAKLI-TEST-EXPIRED" }) }),
+      env
+    );
+    const summary = await env.__testRepo.getAdminSummary();
+    assert.equal(summary.activeInstances, 0, "거부된 활성화가 instance를 남기면 안 된다");
+  });
+
+  test("허용되지 않은 확장 프로그램 ID(Origin)의 활성화는 403 origin_not_allowed로 거부된다", async () => {
+    const env = createTestEnv({ ENVIRONMENT: "production" });
+    const res = await worker.fetch(
+      makeRequest("/v1/license/activate", {
+        method: "POST",
+        body: activateBody(),
+        origin: "chrome-extension://" + "b".repeat(32),
+      }),
+      env
+    );
+    assert.equal(res.status, 403);
+    const body = await res.json();
+    assert.equal(body.error, "origin_not_allowed");
+  });
+
+  test("production 환경에서 Mock provider 설정(test/live 불일치)은 요청을 처리하지 않는다", async () => {
+    const env = createTestEnv({ ENVIRONMENT: "production", LICENSE_PROVIDER: "mock" });
+    const res = await worker.fetch(makeRequest("/v1/license/activate", { method: "POST", body: activateBody() }), env);
+    assert.equal(res.status, 500);
+    const body = await res.json();
+    assert.equal(body.error, "provider_unavailable");
+    assert.equal(body.sessionToken, undefined);
   });
 
   test("존재하지 않는 라이선스 키는 400 invalid_license를 반환한다", async () => {

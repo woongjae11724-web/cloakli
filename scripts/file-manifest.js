@@ -20,6 +20,7 @@ const RELEASE_FILES = [
   "tab-actions.js",
   "entitlement.js",
   "license-client.js",
+  "license-service.js",
   "build-config.js",
 ];
 

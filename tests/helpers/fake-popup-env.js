@@ -18,8 +18,39 @@ const CORE_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "content-core.js"), "utf
 const BUILD_CONFIG_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "build-config.js"), "utf8");
 const ENTITLEMENT_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "entitlement.js"), "utf8");
 const LICENSE_CLIENT_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "license-client.js"), "utf8");
+const LICENSE_SERVICE_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "license-service.js"), "utf8");
 const TAB_ACTIONS_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "tab-actions.js"), "utf8");
 const POPUP_SOURCE = fs.readFileSync(path.join(ROOT_DIR, "popup.js"), "utf8");
+
+// 실제 background와 같은 구성(별도 JS 실행 컨텍스트 + 같은 chrome.storage)을 만든다.
+// popup.js가 chrome.runtime.sendMessage로 보내는 라이선스 메시지를 실제
+// license-service.js(background 코드)가 처리하고, fetch는 테스트가 주입한 구현을 쓴다.
+function createBackgroundBridge(chromeMock, fetchImpl, buildConfigSource) {
+  const sandbox = {
+    console,
+    setTimeout,
+    clearTimeout,
+    chrome: chromeMock,
+    crypto: globalThis.crypto,
+    AbortController: globalThis.AbortController,
+    URL: URL,
+    fetch: fetchImpl || (() => Promise.resolve({ status: 200, json: async () => ({ ok: false, error: "no_fetch_impl_configured" }) })),
+  };
+  sandbox.self = sandbox;
+  sandbox.globalThis = sandbox;
+  const context = vm.createContext(sandbox);
+  vm.runInContext(CORE_SOURCE, context, { filename: "content-core.js" });
+  vm.runInContext(buildConfigSource || BUILD_CONFIG_SOURCE, context, { filename: "build-config.js" });
+  vm.runInContext(ENTITLEMENT_SOURCE, context, { filename: "entitlement.js" });
+  vm.runInContext(LICENSE_CLIENT_SOURCE, context, { filename: "license-client.js" });
+  vm.runInContext(LICENSE_SERVICE_SOURCE, context, { filename: "license-service.js" });
+  return {
+    sandbox,
+    handle(message) {
+      return sandbox.CloakliLicenseService.handleLicenseServiceMessage(message);
+    },
+  };
+}
 
 function clone(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -188,8 +219,26 @@ function createChromeMock(options) {
           setTimeout(() => cb(result), 0);
         },
         set(obj, cb) {
+          if (chromeMock.__storageSetFails) {
+            // 실제 chrome은 저장 실패 시 lastError를 설정한 채 콜백을 호출한다.
+            setTimeout(() => {
+              chromeMock.runtime.lastError = { message: "QUOTA_BYTES quota exceeded" };
+              if (cb) cb();
+              chromeMock.runtime.lastError = undefined;
+            }, 0);
+            return;
+          }
           Object.keys(obj).forEach((k) => {
             storageData[k] = clone(obj[k]);
+          });
+          setTimeout(() => {
+            if (cb) cb();
+          }, 0);
+        },
+        remove(keys, cb) {
+          const list = Array.isArray(keys) ? keys : [keys];
+          list.forEach((k) => {
+            delete storageData[k];
           });
           setTimeout(() => {
             if (cb) cb();
@@ -261,19 +310,43 @@ function createPopupEnv(options) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
-  // content-core.js -> build-config.js -> entitlement.js -> license-client.js -> tab-actions.js
-  // -> popup.js 순서는 popup.html의 <script> 순서와 정확히 같다.
+  // content-core.js -> build-config.js -> entitlement.js -> tab-actions.js -> popup.js
+  // 순서는 popup.html의 <script> 순서와 정확히 같다(popup은 license-client.js를 더 이상
+  // 직접 로드하지 않는다 — 라이선스는 전부 background 메시지로 처리).
   // options.buildConfig가 있으면 그 값으로 build-config.js를 대체해 실행한다(예: development/production 모드 시뮬레이션).
   // options.skipBuildConfig가 true면 build-config.js 자체를 아예 실행하지 않는다(빌드 파일 누락 시나리오).
   env.loadPopupScript = function loadPopupScript(loadOptions) {
     const loadOpts = loadOptions || {};
+    const configSource = loadOpts.buildConfig ? buildConfigSourceFor(loadOpts.buildConfig) : BUILD_CONFIG_SOURCE;
+
+    // 실제 구조와 동일하게, popup과는 별도의 실행 컨텍스트에서 background(license-service)를
+    // 띄우고 같은 chrome.storage를 공유시킨다. popup의 chrome.runtime.sendMessage가 이
+    // background로 전달된다. opts.noBackground: 응답 없는 background(오류 경로) 모의.
+    // opts.backgroundDelayMs: 응답 지연(로딩 상태 검증용).
+    if (!opts.noBackground) {
+      env.background = createBackgroundBridge(sandbox.chrome, sandbox.fetch, loadOpts.skipBuildConfig ? undefined : configSource);
+      sandbox.chrome.runtime.sendMessage = function sendMessage(message, cb) {
+        const delay = typeof opts.backgroundDelayMs === "number" ? opts.backgroundDelayMs : 0;
+        env.background
+          .handle(message)
+          .then((response) => setTimeout(() => cb && cb(response), delay))
+          .catch(() => setTimeout(() => cb && cb({ ok: false, error: "internal_error" }), delay));
+      };
+    } else {
+      sandbox.chrome.runtime.sendMessage = function sendMessage(message, cb) {
+        sandbox.chrome.runtime.lastError = { message: "Could not establish connection" };
+        setTimeout(() => {
+          if (cb) cb(undefined);
+          sandbox.chrome.runtime.lastError = undefined;
+        }, 0);
+      };
+    }
+
     vm.runInContext(CORE_SOURCE, context, { filename: "content-core.js" });
     if (!loadOpts.skipBuildConfig) {
-      const configSource = loadOpts.buildConfig ? buildConfigSourceFor(loadOpts.buildConfig) : BUILD_CONFIG_SOURCE;
       vm.runInContext(configSource, context, { filename: "build-config.js" });
     }
     vm.runInContext(ENTITLEMENT_SOURCE, context, { filename: "entitlement.js" });
-    vm.runInContext(LICENSE_CLIENT_SOURCE, context, { filename: "license-client.js" });
     vm.runInContext(TAB_ACTIONS_SOURCE, context, { filename: "tab-actions.js" });
     vm.runInContext(POPUP_SOURCE, context, { filename: "popup.js" });
   };

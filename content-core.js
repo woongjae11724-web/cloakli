@@ -357,7 +357,7 @@
   //       재렌더링, 순서 변경 대응). DOM 접근/점수 계산은 content.js가 맡고, 여기서는 호출만 한다.
   // 규칙 하나가 잘못되었거나 queryElements/maskElement가 예외를 던져도 나머지 규칙은 계속 처리한다.
   function applyRuleSet(rules, adapters) {
-    const result = { appliedCount: 0, skippedInvalidRules: 0, erroredRules: 0, processedRules: 0 };
+    const result = { appliedCount: 0, skippedInvalidRules: 0, erroredRules: 0, processedRules: 0, skippedBroadRules: 0 };
     if (!Array.isArray(rules) || !adapters || typeof adapters.queryElements !== "function") {
       return result;
     }
@@ -393,7 +393,15 @@
           return;
         }
 
-        // page/site 범위는 여러 요소를 가리는 것이 의도된 동작이다.
+        // page/site 범위는 여러 요소를 가리는 것이 의도된 동작이다. 다만 이전 버전에서
+        // 저장된 지나치게 넓은 selector(bare 태그/재사용 id 하나 등)나, 사이트 구조가 바뀌어
+        // 저장 당시보다 훨씬 많은 요소와 일치하게 된 규칙은 자동 적용을 중단한다 — 다른
+        // 카드 전체를 잘못 가리는 것보다 "이번엔 가리지 않음"이 항상 더 안전하다.
+        // (옵션 화면이 이런 규칙에 경고를 표시하므로, 사용자는 삭제 후 다시 선택하면 된다.)
+        if (isRiskySelector(rule.selector) || elements.length > GENERALIZED_SELECTOR_LIMITS.MAX_MATCHES) {
+          result.skippedBroadRules++;
+          return;
+        }
         for (const el of elements) {
           if (!isSelectable(el)) continue;
           if (maskElement(el)) result.appliedCount++;

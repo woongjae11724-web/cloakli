@@ -1088,11 +1088,14 @@
           const all = (result && result[STORAGE_KEY]) || {};
           const list = Array.isArray(all[newRule.hostname]) ? all[newRule.hostname] : [];
 
-          // 무료/Pro 한도 판단은 항상 CloakliEntitlement.canCreateRule() 하나만 거친다.
-          // popup/options의 사용량 표시도 같은 모듈(computeUsage)을 사용하므로 서로 다른
-          // 기준으로 계산되지 않는다.
+          // 무료/Pro 한도 판단은 저장 직전에 background(GET_ENTITLEMENT)에 물어 최신
+          // 판정으로 수행하고, 규칙은 항상 CloakliEntitlement.canCreateRule() 하나만
+          // 거친다. background에 닿을 수 없으면 같은 저장 레코드에서 prime된 로컬
+          // 캐시로 판정한다. popup/options의 사용량 표시도 같은 모듈(computeUsage)을
+          // 사용하므로 서로 다른 기준으로 계산되지 않는다.
+          withBackgroundEntitlement((remoteEntitlement) => {
           const decision = CloakliEntitlement.canCreateRule({
-            entitlementState: CloakliEntitlement.getEntitlementState(),
+            entitlementState: remoteEntitlement || CloakliEntitlement.getEntitlementState(),
             allRulesByHostname: all,
             hostname: newRule.hostname,
             scope: newRule.scope,
@@ -1134,6 +1137,7 @@
             }
             resolve({ ok: true, duplicate: false });
           });
+          }); // withBackgroundEntitlement
         });
       } catch (err) {
         resolve({ ok: false });
@@ -1839,7 +1843,7 @@
     root.appendChild(targetLine);
 
     const generalAvailable = !!state.generalSelector && state.generalSafety.ok;
-    const countSuffix = generalAvailable ? " (" + state.generalCount + "개)" : "";
+    const countSuffix = generalAvailable ? " " + msg("scopeMatchCount", "($1개)", [String(state.generalCount)]) : "";
 
     root.appendChild(
       buildScopeButton({
@@ -1900,14 +1904,21 @@
     const strictTarget = resolveVisualMaskTarget(el, role);
     const visualTarget = strictTarget || el;
 
+    // Pro 여부는 background(GET_ENTITLEMENT) 하나로만 판단한다. background에 닿을 수
+    // 없으면 같은 저장 레코드에서 prime된 로컬 캐시로 판정한다(근거 데이터는 동일).
+    // 받은 값을 picker 상태에 저장해 배지 표시(renderScopePicker)와 저장 시점 검사
+    // (confirmScope)가 같은 값을 공유하게 한다.
+    withBackgroundEntitlement((remoteEntitlement) => {
+      openScopePickerWithEntitlement(el, role, familyInfo, strictTarget, visualTarget, remoteEntitlement);
+    });
+  }
+
+  function openScopePickerWithEntitlement(el, role, familyInfo, strictTarget, visualTarget, remoteEntitlement) {
     // "이 요소만"과 "같은 종류" 범위의 사용 가능 여부는 서로 완전히 독립적으로 계산한다.
     // 한쪽 selector 생성이 실패해도 다른 쪽 버튼의 활성화에는 영향을 주지 않는다.
     const specificSelector = buildElementScopeSelector(visualTarget);
     const generalSelector = strictTarget ? generateGeneralizedSelector(strictTarget) : null;
-
-    // Pro 여부는 CloakliEntitlement 하나로만 판단하고, 이 값을 picker 상태에 저장해
-    // 배지 표시(renderScopePicker)와 저장 시점 검사(confirmScope)가 같은 값을 공유하게 한다.
-    const isPro = CloakliEntitlement.isProUser(CloakliEntitlement.getEntitlementState());
+    const isPro = CloakliEntitlement.isProUser(remoteEntitlement || CloakliEntitlement.getEntitlementState());
 
     let generalCount = 0;
     let generalSafety = { ok: false, reason: "selector-missing" };
@@ -2167,11 +2178,42 @@
     }
   }
 
-  // 라이선스 서버 entitlement 캐시(cloakliLicenseCache)가 popup/background에서
-  // 갱신되면, 이 탭의 entitlement.js 인메모리 캐시도 즉시 새로고침한다. 다시 storage를
-  // 읽지 않고 change.newValue를 그대로 반영한다 - isHostPaused 캐싱과 같은 패턴이다.
+  // 통합 entitlement 레코드(cloakli.entitlement.v1)가 background에서 갱신되면, 이 탭의
+  // entitlement.js 인메모리 캐시도 즉시 새로고침한다. sessionToken은 캐시에 넣지 않는다
+  // (publicEntitlementFromRecord가 공개 부분만 남긴다).
   function handleLicenseCacheChanged(change) {
-    CloakliEntitlement.setLicenseEntitlement(change.newValue || null);
+    CloakliEntitlement.setLicenseEntitlement(CloakliLicenseClient.publicEntitlementFromRecord(change.newValue || null));
+  }
+
+  // Pro 범위 기능(범위 선택 UI 표시/규칙 저장) 직전에 background에 GET_ENTITLEMENT를
+  // 물어 최신 판정을 받는다. background에 닿을 수 없으면(테스트 환경, 일시적 오류)
+  // null을 돌려주고, 호출자는 storage에서 prime된 로컬 캐시(같은 저장 값에서 나온
+  // 같은 판정)로 대신한다 — 어느 쪽이든 판정 근거는 background가 저장한 레코드 하나다.
+  function withBackgroundEntitlement(callback) {
+    if (!(typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function")) {
+      callback(null);
+      return;
+    }
+    let done = false;
+    const finish = (value) => {
+      if (done) return;
+      done = true;
+      callback(value);
+    };
+    const timeoutId = setTimeout(() => finish(null), 1500);
+    try {
+      chrome.runtime.sendMessage({ type: "GET_ENTITLEMENT" }, (response) => {
+        clearTimeout(timeoutId);
+        if (chrome.runtime.lastError || !response || !response.ok || !response.entitlement) {
+          finish(null);
+          return;
+        }
+        finish(response.entitlement);
+      });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      finish(null);
+    }
   }
 
   function handleStorageChanged(changes, areaName) {
@@ -2185,8 +2227,8 @@
       if (changes[PAUSED_STORAGE_KEY]) {
         handlePausedStorageChanged(changes[PAUSED_STORAGE_KEY]);
       }
-      if (changes[CloakliLicenseClient.LICENSE_CACHE_KEY]) {
-        handleLicenseCacheChanged(changes[CloakliLicenseClient.LICENSE_CACHE_KEY]);
+      if (changes[CloakliLicenseClient.ENTITLEMENT_STORAGE_KEY]) {
+        handleLicenseCacheChanged(changes[CloakliLicenseClient.ENTITLEMENT_STORAGE_KEY]);
       }
     } catch (err) {
       // 리스너 내부 오류가 확장 프로그램 전체를 중단시키지 않게 한다.
