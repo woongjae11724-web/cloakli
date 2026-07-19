@@ -2,9 +2,8 @@
 // placeholder(YOUR_*, null)는 production 배포 전 반드시 실제 값으로 교체해야 하며,
 // tests/website.test.js와 scripts/check-website.js --strict 가 이를 검사한다.
 window.CLOAKLI_SITE = {
-  // 출시 후 실제 Chrome Web Store 상세 페이지 URL로 교체. 빈 값이면 설치 버튼은
-  // "Coming soon"으로 비활성화된다(빈/가짜 URL로 이동하지 않음).
-  chromeStoreUrl: "",
+  // 2026-07-17 Chrome Web Store 심사 통과 후 실제 상세 페이지 URL로 교체 완료.
+  chromeStoreUrl: "https://chromewebstore.google.com/detail/cloakli/acclgmjcmnkibafjjkmphmfpbfbcedaf",
 
   // Lemon Squeezy 결제 페이지 (비밀 아님 — 공개 checkout 주소)
   checkoutUrl: "https://mycloakli.lemonsqueezy.com/checkout/buy/cfc2a207-b317-443f-addc-6a85a91d533e",
