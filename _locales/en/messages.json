@@ -113,6 +113,39 @@
   "proInfoFeature5": {
     "message": "Future Pro features"
   },
+  "shortcutsBtn": {
+    "message": "Keyboard shortcuts"
+  },
+  "shortcutsHeading": {
+    "message": "Keyboard shortcuts"
+  },
+  "shortcutNameStartSelection": {
+    "message": "Start selecting an element"
+  },
+  "shortcutNameTemporarilyClear": {
+    "message": "Temporarily restore this page"
+  },
+  "shortcutNotSet": {
+    "message": "Not set"
+  },
+  "shortcutsConfigureBtn": {
+    "message": "Manage shortcuts"
+  },
+  "shortcutsLoadFailed": {
+    "message": "Couldn't load shortcut information."
+  },
+  "shortcutsFallbackHint": {
+    "message": "If it doesn't open automatically, copy the address below and paste it into a new tab."
+  },
+  "shortcutsCopyBtn": {
+    "message": "Copy"
+  },
+  "shortcutsCopied": {
+    "message": "Copied."
+  },
+  "shortcutsCopyFailed": {
+    "message": "Couldn't copy automatically. Please select and copy the address yourself."
+  },
   "checkoutNotReady": {
     "message": "Pro purchase isn't available yet."
   },

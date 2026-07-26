@@ -283,6 +283,97 @@ body {
   outline-offset: 1px;
 }
 
+/* 키보드 단축키 안내 패널 — "Pro 알아보기"와 같은 조용한 카드 톤을 공유한다 */
+.cloakli-shortcuts-section {
+  margin-top: 2px;
+  padding: 10px 12px;
+  background: #2a2b31;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.cloakli-shortcuts-heading {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #4da3ff;
+}
+
+.cloakli-shortcuts-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cloakli-shortcuts-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cloakli-shortcuts-name {
+  color: #e2e4e9;
+}
+
+.cloakli-shortcuts-key {
+  flex-shrink: 0;
+  background: #3a3c44;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  color: #f2f2f2;
+  white-space: nowrap;
+}
+
+.cloakli-shortcuts-key-unset {
+  background: none;
+  border: 1px dashed #4a4c55;
+  color: #9a9da5;
+}
+
+.cloakli-shortcuts-message {
+  margin: 0 0 8px;
+  color: #9a9da5;
+}
+
+.cloakli-shortcuts-fallback {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #3a3c44;
+}
+
+.cloakli-shortcuts-fallback p {
+  margin: 0 0 6px;
+  color: #9a9da5;
+}
+
+.cloakli-shortcuts-copy-row {
+  display: flex;
+  gap: 6px;
+}
+
+.cloakli-shortcuts-url-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #3a3c44;
+  border-radius: 6px;
+  background: #1e1f24;
+  color: #f2f2f2;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.cloakli-shortcuts-copy-status {
+  margin: 6px 0 0;
+  min-height: 14px;
+  color: #8fd0a3;
+}
+
 .cloakli-btn-icon {
   border: 1px solid #3a3c44;
   border-radius: 6px;

@@ -208,6 +208,19 @@ class FakeElement extends FakeNode {
     if (this.parentNode) this.parentNode.removeChild(this);
   }
 
+  // 이 프로젝트의 실제 소스는 항상 innerHTML = ""(목록 다시 그리기 전 비우기) 형태로만
+  // 쓰므로, 그 용도만 정확히(자식 제거 + removeChild 알림까지) 지원한다. 그 외 값은 실제
+  // HTML 파싱기를 만들 이유가 없으므로 오류로 명확히 드러낸다(조용히 무시하지 않는다).
+  set innerHTML(value) {
+    if (value !== "") {
+      throw new Error('FakeElement.innerHTML은 빈 문자열로 비우는 용도만 지원합니다: ' + JSON.stringify(value));
+    }
+    this.childNodes.slice().forEach((child) => this.removeChild(child));
+  }
+  get innerHTML() {
+    return "";
+  }
+
   closest(selectorList) {
     const selectors = selectorList.split(",").map((s) => s.trim());
     let node = this;

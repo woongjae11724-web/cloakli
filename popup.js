@@ -70,6 +70,16 @@ const proInfoSection = document.getElementById("cloakli-pro-info");
 const proInfoCloseBtn = document.getElementById("cloakli-pro-info-close-btn");
 const proInfoCtaEl = document.getElementById("cloakli-pro-info-cta");
 
+const shortcutsBtn = document.getElementById("cloakli-shortcuts-btn");
+const shortcutsSectionEl = document.getElementById("cloakli-shortcuts-section");
+const shortcutsListEl = document.getElementById("cloakli-shortcuts-list");
+const shortcutsMessageEl = document.getElementById("cloakli-shortcuts-message");
+const shortcutsConfigureBtn = document.getElementById("cloakli-shortcuts-configure-btn");
+const shortcutsFallbackEl = document.getElementById("cloakli-shortcuts-fallback");
+const shortcutsUrlInput = document.getElementById("cloakli-shortcuts-url-input");
+const shortcutsCopyBtn = document.getElementById("cloakli-shortcuts-copy-btn");
+const shortcutsCopyStatusEl = document.getElementById("cloakli-shortcuts-copy-status");
+
 const licenseFreeActionsEl = document.getElementById("cloakli-license-free-actions");
 const buyProBtn = document.getElementById("cloakli-buy-pro-btn");
 const showLicenseInputBtn = document.getElementById("cloakli-show-license-input-btn");
@@ -180,6 +190,142 @@ proInfoBtn.addEventListener("click", () => {
 });
 proInfoCloseBtn.addEventListener("click", () => {
   proInfoSection.hidden = true;
+});
+
+// ---------------------------------------------------------------------
+// 키보드 단축키 안내 (Free/Pro 구분 없이 항상 볼 수 있다).
+//
+// manifest.json의 command ID/suggested_key는 이 섹션이 절대 건드리지 않는다 — 여기서
+// 보여주는 값은 chrome.commands.getAll()이 "지금 실제로" 돌려주는 현재 상태를 그대로
+// 반영할 뿐이다(사용자가 직접 재배정했을 수도 있으므로 manifest 값을 가정하지 않는다).
+// ---------------------------------------------------------------------
+
+const SHORTCUTS_SETTINGS_URL = "chrome://extensions/shortcuts";
+
+// command name -> 팝업에 표시할 사용자 친화적 이름의 i18n 키. manifest의 description
+// (예: "가릴 영역 선택 시작")과는 별개로, 팝업 안에서만 쓰는 더 짧은 이름이다. 여기 없는
+// command(예: 브라우저 예약 command)는 목록에서 조용히 제외한다.
+const SHORTCUT_DISPLAY_NAMES = {
+  "start-selection": ["shortcutNameStartSelection", "요소 선택 시작"],
+  "temporarily-clear-page": ["shortcutNameTemporarilyClear", "이 페이지 임시 복원"],
+};
+
+function buildShortcutRow(nameText, keyText, isSet) {
+  const li = document.createElement("li");
+  li.className = "cloakli-shortcuts-item";
+  const nameEl = document.createElement("span");
+  nameEl.className = "cloakli-shortcuts-name";
+  nameEl.textContent = nameText;
+  const keyEl = document.createElement("span");
+  keyEl.className = "cloakli-shortcuts-key" + (isSet ? "" : " cloakli-shortcuts-key-unset");
+  keyEl.textContent = keyText;
+  li.appendChild(nameEl);
+  li.appendChild(keyEl);
+  return li;
+}
+
+function showShortcutsLoadError() {
+  shortcutsListEl.innerHTML = "";
+  shortcutsMessageEl.textContent = msg("shortcutsLoadFailed", "단축키 정보를 불러오지 못했습니다.");
+  shortcutsMessageEl.hidden = false;
+}
+
+// chrome.commands.getAll()로 이 확장의 실제 현재 단축키를 조회해 목록을 그린다. API 자체가
+// 없거나(오래된 Chrome) 호출이 실패해도 팝업의 다른 기능에는 영향을 주지 않고, 안내
+// 문구로만 대체한다. 단축키가 비어 있으면(사용자가 지운 경우 포함) "설정되지 않음"으로
+// 표시한다 — 실제 조회 결과를 그대로 보여줄 뿐 임의로 기본값을 가정하지 않는다.
+function renderShortcuts() {
+  shortcutsMessageEl.hidden = true;
+  shortcutsListEl.innerHTML = "";
+
+  if (!(typeof chrome !== "undefined" && chrome.commands && typeof chrome.commands.getAll === "function")) {
+    showShortcutsLoadError();
+    return;
+  }
+
+  try {
+    chrome.commands.getAll((commands) => {
+      if (chrome.runtime.lastError || !Array.isArray(commands)) {
+        showShortcutsLoadError();
+        return;
+      }
+      const relevant = commands.filter((c) => c && c.name && SHORTCUT_DISPLAY_NAMES[c.name]);
+      if (relevant.length === 0) {
+        showShortcutsLoadError();
+        return;
+      }
+      shortcutsListEl.innerHTML = "";
+      relevant.forEach((command) => {
+        const [key, fallback] = SHORTCUT_DISPLAY_NAMES[command.name];
+        const nameText = msg(key, fallback);
+        const shortcut = typeof command.shortcut === "string" ? command.shortcut.trim() : "";
+        const keyText = shortcut || msg("shortcutNotSet", "설정되지 않음");
+        shortcutsListEl.appendChild(buildShortcutRow(nameText, keyText, !!shortcut));
+      });
+    });
+  } catch (err) {
+    showShortcutsLoadError();
+  }
+}
+
+shortcutsBtn.addEventListener("click", () => {
+  const opening = shortcutsSectionEl.hidden;
+  shortcutsSectionEl.hidden = !opening;
+  if (opening) {
+    shortcutsFallbackEl.hidden = true;
+    shortcutsCopyStatusEl.textContent = "";
+    renderShortcuts();
+  }
+});
+
+// chrome://extensions/shortcuts를 새 탭으로 연다. 확장에서 내부 페이지로의 tabs.create가
+// 거부되는 경우(정책 변경, 특수 환경 등 예상 밖 상황 포함) 조용히 실패시키지 않고, 사용자가
+// 직접 주소를 복사해 붙여넣을 수 있는 대체 안내를 보여준다.
+shortcutsConfigureBtn.addEventListener("click", () => {
+  withButtonGuard(shortcutsConfigureBtn, async () => {
+    let opened = false;
+    try {
+      await new Promise((resolve, reject) => {
+        chrome.tabs.create({ url: SHORTCUTS_SETTINGS_URL }, () => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve();
+        });
+      });
+      opened = true;
+    } catch (err) {
+      opened = false;
+    }
+    shortcutsFallbackEl.hidden = opened;
+    if (!opened) {
+      shortcutsCopyStatusEl.textContent = "";
+    }
+  });
+});
+
+shortcutsCopyBtn.addEventListener("click", () => {
+  shortcutsCopyStatusEl.textContent = "";
+  const markCopied = () => {
+    shortcutsCopyStatusEl.textContent = msg("shortcutsCopied", "복사되었습니다.");
+  };
+  const markFailed = () => {
+    shortcutsCopyStatusEl.textContent = msg(
+      "shortcutsCopyFailed",
+      "복사하지 못했습니다. 주소를 직접 선택해 복사해 주세요."
+    );
+    if (typeof shortcutsUrlInput.select === "function") shortcutsUrlInput.select();
+  };
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      navigator.clipboard.writeText(SHORTCUTS_SETTINGS_URL).then(markCopied, markFailed);
+    } else {
+      markFailed();
+    }
+  } catch (err) {
+    markFailed();
+  }
 });
 
 // https:// 로 시작하는 URL만 허용한다. javascript: 등 스킴이나 빈 값/설정 전 placeholder는 거부한다.

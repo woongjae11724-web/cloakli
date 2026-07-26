@@ -108,6 +108,28 @@ function buildPopupDom(env) {
   proInfoSection.appendChild(proInfoCta);
   proInfoSection.appendChild(proInfoCloseBtn);
 
+  const shortcutsBtn = make("button", "cloakli-shortcuts-btn");
+  shortcutsBtn.setAttribute("data-i18n", "shortcutsBtn");
+  const shortcutsSection = make("section", "cloakli-shortcuts-section", true);
+  const shortcutsList = make("ul", "cloakli-shortcuts-list");
+  const shortcutsMessage = make("p", "cloakli-shortcuts-message", true);
+  const shortcutsConfigureBtn = make("button", "cloakli-shortcuts-configure-btn");
+  shortcutsConfigureBtn.setAttribute("data-i18n", "shortcutsConfigureBtn");
+  const shortcutsFallback = make("div", "cloakli-shortcuts-fallback", true);
+  const shortcutsUrlInput = make("input", "cloakli-shortcuts-url-input");
+  shortcutsUrlInput.type = "text";
+  shortcutsUrlInput.value = "chrome://extensions/shortcuts";
+  const shortcutsCopyBtn = make("button", "cloakli-shortcuts-copy-btn");
+  shortcutsCopyBtn.setAttribute("data-i18n", "shortcutsCopyBtn");
+  const shortcutsCopyStatus = make("p", "cloakli-shortcuts-copy-status");
+  shortcutsFallback.appendChild(shortcutsUrlInput);
+  shortcutsFallback.appendChild(shortcutsCopyBtn);
+  shortcutsFallback.appendChild(shortcutsCopyStatus);
+  shortcutsSection.appendChild(shortcutsList);
+  shortcutsSection.appendChild(shortcutsMessage);
+  shortcutsSection.appendChild(shortcutsConfigureBtn);
+  shortcutsSection.appendChild(shortcutsFallback);
+
   const licenseFreeActions = make("div", "cloakli-license-free-actions", true);
   const buyProBtn = make("button", "cloakli-buy-pro-btn");
   const showLicenseInputBtn = make("button", "cloakli-show-license-input-btn");
@@ -152,6 +174,8 @@ function buildPopupDom(env) {
     helpBtn,
     proInfoBtn,
     proInfoSection,
+    shortcutsBtn,
+    shortcutsSection,
     licenseFreeActions,
     licenseInputArea,
     licenseActiveInfo,
@@ -200,8 +224,26 @@ function createChromeMock(options) {
       update() {
         return Promise.resolve();
       },
-      create(details) {
+      // 실제 chrome.tabs.create처럼 콜백을 지원한다(popup.js가 chrome://extensions/shortcuts를
+      // 열 때 콜백으로 성공/실패를 판단한다). opts.tabsCreateFails를 주면 chrome.runtime.lastError를
+      // 설정한 채 콜백을 호출해 "내부 페이지 열기 거부" 시나리오를 재현할 수 있다.
+      create(details, callback) {
         calls.tabsCreate.push(details);
+        if (opts.tabsCreateFails) {
+          if (typeof callback === "function") {
+            setTimeout(() => {
+              chromeMock.runtime.lastError = { message: "tabs.create failed" };
+              callback(undefined);
+              chromeMock.runtime.lastError = undefined;
+            }, 0);
+            return undefined;
+          }
+          return Promise.reject(new Error("tabs.create failed"));
+        }
+        if (typeof callback === "function") {
+          setTimeout(() => callback({ id: 999, url: details && details.url }), 0);
+          return undefined;
+        }
         return Promise.resolve();
       },
     },
@@ -217,6 +259,28 @@ function createChromeMock(options) {
         return Promise.resolve();
       },
     },
+    // chrome.commands는 기본적으로 아예 없는 것으로 취급한다(popup.js는 이 경우 안내
+    // 문구로 대체해야 한다). opts.commands(배열, chrome.commands.getAll()이 실제로 돌려주는
+    // { name, description, shortcut } 형태)나 opts.commandsFail(getAll 실패 시나리오)을
+    // 주면 API가 있는 것으로 취급한다.
+    ...(opts.commands || opts.commandsFail
+      ? {
+          commands: {
+            onCommand: { addListener: () => {} },
+            getAll(callback) {
+              if (opts.commandsFail) {
+                setTimeout(() => {
+                  chromeMock.runtime.lastError = { message: "commands.getAll failed" };
+                  callback(undefined);
+                  chromeMock.runtime.lastError = undefined;
+                }, 0);
+                return;
+              }
+              setTimeout(() => callback(clone(opts.commands) || []), 0);
+            },
+          },
+        }
+      : {}),
     storage: {
       local: {
         get(keys, cb) {
