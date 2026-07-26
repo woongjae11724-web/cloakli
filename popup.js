@@ -70,8 +70,6 @@ const proInfoSection = document.getElementById("cloakli-pro-info");
 const proInfoCloseBtn = document.getElementById("cloakli-pro-info-close-btn");
 const proInfoCtaEl = document.getElementById("cloakli-pro-info-cta");
 
-const shortcutsBtn = document.getElementById("cloakli-shortcuts-btn");
-const shortcutsSectionEl = document.getElementById("cloakli-shortcuts-section");
 const shortcutsListEl = document.getElementById("cloakli-shortcuts-list");
 const shortcutsMessageEl = document.getElementById("cloakli-shortcuts-message");
 const shortcutsConfigureBtn = document.getElementById("cloakli-shortcuts-configure-btn");
@@ -195,6 +193,10 @@ proInfoCloseBtn.addEventListener("click", () => {
 // ---------------------------------------------------------------------
 // 키보드 단축키 안내 (Free/Pro 구분 없이 항상 볼 수 있다).
 //
+// 팝업 하단에 접혀 있던 링크를 누르지 않아도, 팝업을 여는 즉시(클릭 없이) 카드가
+// 항상 보이고 실제 단축키 값도 곧바로 채워진다 — 사용자가 단축키 기능의 존재 자체를
+// 모르는 문제를 없애기 위함이다.
+//
 // manifest.json의 command ID/suggested_key는 이 섹션이 절대 건드리지 않는다 — 여기서
 // 보여주는 값은 chrome.commands.getAll()이 "지금 실제로" 돌려주는 현재 상태를 그대로
 // 반영할 뿐이다(사용자가 직접 재배정했을 수도 있으므로 manifest 값을 가정하지 않는다).
@@ -224,13 +226,26 @@ function buildShortcutRow(nameText, keyText, isSet) {
   return li;
 }
 
+// 단축키가 하나라도 설정되지 않았을 때만 "단축키 설정" 버튼에 강조 class를 붙인다.
+// 둘 다 설정돼 있으면 항상 작은 기본 모습으로 되돌린다(그래도 눌러서 바꿀 수는 있다).
+function setShortcutsAttention(anyUnset) {
+  if (anyUnset) {
+    shortcutsConfigureBtn.classList.add("cloakli-shortcuts-configure-btn-attention");
+  } else {
+    shortcutsConfigureBtn.classList.remove("cloakli-shortcuts-configure-btn-attention");
+  }
+}
+
 function showShortcutsLoadError() {
   shortcutsListEl.innerHTML = "";
   shortcutsMessageEl.textContent = msg("shortcutsLoadFailed", "단축키 정보를 불러오지 못했습니다.");
   shortcutsMessageEl.hidden = false;
+  // 조회 자체가 안 됐으니 설정 여부를 알 수 없다 — 임의로 강조하지 않는다.
+  setShortcutsAttention(false);
 }
 
-// chrome.commands.getAll()로 이 확장의 실제 현재 단축키를 조회해 목록을 그린다. API 자체가
+// chrome.commands.getAll()로 이 확장의 실제 현재 단축키를 조회해 목록을 그린다. 팝업을
+// 열 때 다른 초기화 호출들과 함께 즉시 실행되며(클릭으로 펼치는 구조 없음), API 자체가
 // 없거나(오래된 Chrome) 호출이 실패해도 팝업의 다른 기능에는 영향을 주지 않고, 안내
 // 문구로만 대체한다. 단축키가 비어 있으면(사용자가 지운 경우 포함) "설정되지 않음"으로
 // 표시한다 — 실제 조회 결과를 그대로 보여줄 뿐 임의로 기본값을 가정하지 않는다.
@@ -255,28 +270,21 @@ function renderShortcuts() {
         return;
       }
       shortcutsListEl.innerHTML = "";
+      let anyUnset = false;
       relevant.forEach((command) => {
         const [key, fallback] = SHORTCUT_DISPLAY_NAMES[command.name];
         const nameText = msg(key, fallback);
         const shortcut = typeof command.shortcut === "string" ? command.shortcut.trim() : "";
+        if (!shortcut) anyUnset = true;
         const keyText = shortcut || msg("shortcutNotSet", "설정되지 않음");
         shortcutsListEl.appendChild(buildShortcutRow(nameText, keyText, !!shortcut));
       });
+      setShortcutsAttention(anyUnset);
     });
   } catch (err) {
     showShortcutsLoadError();
   }
 }
-
-shortcutsBtn.addEventListener("click", () => {
-  const opening = shortcutsSectionEl.hidden;
-  shortcutsSectionEl.hidden = !opening;
-  if (opening) {
-    shortcutsFallbackEl.hidden = true;
-    shortcutsCopyStatusEl.textContent = "";
-    renderShortcuts();
-  }
-});
 
 // chrome://extensions/shortcuts를 새 탭으로 연다. 확장에서 내부 페이지로의 tabs.create가
 // 거부되는 경우(정책 변경, 특수 환경 등 예상 밖 상황 포함) 조용히 실패시키지 않고, 사용자가
@@ -768,6 +776,7 @@ manageBtn.addEventListener("click", () => {
 checkOnboarding();
 refreshStatus();
 renderDevBadge();
+renderShortcuts();
 
 // 응답이 오기 전까지는 Free가 아니라 "요금제 확인 중…"을 표시한다. Pro 여부는
 // background(GET_ENTITLEMENT) 하나만 신뢰하며, 팝업을 닫아도 아무것도 지우지 않는다 —

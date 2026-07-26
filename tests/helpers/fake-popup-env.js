@@ -78,7 +78,9 @@ function buildPopupDom(env) {
   function make(tag, id, hidden) {
     const el = doc.createElement(tag);
     el.id = id;
-    if (hidden) el.hidden = true;
+    // 실제 HTMLElement.hidden은 속성이 없으면 false다(undefined가 아니다) — 테스트가
+    // "보인다"를 hidden === false로 단정할 수 있도록 항상 명시적으로 초기화한다.
+    el.hidden = !!hidden;
     return el;
   }
 
@@ -108,9 +110,10 @@ function buildPopupDom(env) {
   proInfoSection.appendChild(proInfoCta);
   proInfoSection.appendChild(proInfoCloseBtn);
 
-  const shortcutsBtn = make("button", "cloakli-shortcuts-btn");
-  shortcutsBtn.setAttribute("data-i18n", "shortcutsBtn");
-  const shortcutsSection = make("section", "cloakli-shortcuts-section", true);
+  // 상시 노출 카드(접기/펼치기 없음) — 실제 popup.html과 동일하게 hidden이 없다.
+  const shortcutsSection = make("section", "cloakli-shortcuts-section");
+  const shortcutsHeading = make("h2", "cloakli-shortcuts-heading");
+  shortcutsHeading.setAttribute("data-i18n", "shortcutsHeading");
   const shortcutsList = make("ul", "cloakli-shortcuts-list");
   const shortcutsMessage = make("p", "cloakli-shortcuts-message", true);
   const shortcutsConfigureBtn = make("button", "cloakli-shortcuts-configure-btn");
@@ -125,6 +128,7 @@ function buildPopupDom(env) {
   shortcutsFallback.appendChild(shortcutsUrlInput);
   shortcutsFallback.appendChild(shortcutsCopyBtn);
   shortcutsFallback.appendChild(shortcutsCopyStatus);
+  shortcutsSection.appendChild(shortcutsHeading);
   shortcutsSection.appendChild(shortcutsList);
   shortcutsSection.appendChild(shortcutsMessage);
   shortcutsSection.appendChild(shortcutsConfigureBtn);
@@ -174,7 +178,6 @@ function buildPopupDom(env) {
     helpBtn,
     proInfoBtn,
     proInfoSection,
-    shortcutsBtn,
     shortcutsSection,
     licenseFreeActions,
     licenseInputArea,

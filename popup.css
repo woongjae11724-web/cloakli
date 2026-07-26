@@ -283,19 +283,65 @@ body {
   outline-offset: 1px;
 }
 
-/* 키보드 단축키 안내 패널 — "Pro 알아보기"와 같은 조용한 카드 톤을 공유한다 */
+/* 키보드 단축키 상시 노출 카드 — "Pro 알아보기"와 같은 조용한 카드 톤을 공유하되,
+   접기/펼치기 없이 항상 보이므로 위아래 다른 요소들과 리듬이 맞도록 margin을 준다. */
 .cloakli-shortcuts-section {
-  margin-top: 2px;
-  padding: 10px 12px;
+  margin: 2px 0;
+  padding: 8px 10px;
   background: #2a2b31;
   border-radius: 8px;
   font-size: 12px;
 }
 
+.cloakli-shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+
 .cloakli-shortcuts-heading {
-  margin: 0 0 8px;
-  font-size: 13px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
   color: #4da3ff;
+}
+
+/* 평소엔 작은 텍스트 링크로 유지한다(요구사항: 둘 다 설정돼 있어도 눈에 띄지 않게).
+   단축키가 하나라도 비어 있을 때만 popup.js가 -attention class를 붙여 강조한다. */
+.cloakli-shortcuts-configure-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #8fa3c7;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 2px 7px;
+  text-decoration: underline;
+}
+
+.cloakli-shortcuts-configure-btn:hover {
+  color: #b9c6dd;
+}
+
+.cloakli-shortcuts-configure-btn:focus-visible {
+  outline: 2px solid #4da3ff;
+  outline-offset: 2px;
+}
+
+.cloakli-shortcuts-configure-btn-attention {
+  background: rgba(224, 138, 45, 0.16);
+  border-color: #e08a2d;
+  color: #f5b46a;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cloakli-shortcuts-configure-btn-attention:hover {
+  color: #ffcf95;
 }
 
 .cloakli-shortcuts-list {

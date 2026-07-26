@@ -111,10 +111,34 @@
         저장된 가림 관리
       </button>
 
+      <!-- 키보드 단축키 상시 노출 카드. 팝업을 열자마자(클릭 없이) 현재 실제 단축키
+           2개를 바로 보여준다. Free/Pro 구분 없음. 실제 값은 chrome.commands.getAll()로
+           팝업을 열 때마다 조회하므로(popup.js), 목록 항목은 정적 마크업 없이 스크립트가
+           채운다. 헤더 우측의 "단축키 설정" 버튼은 평소엔 작게 유지되다가, 둘 중 하나라도
+           설정되지 않았을 때만 popup.js가 강조 class를 붙인다. -->
+      <section id="cloakli-shortcuts-section" class="cloakli-shortcuts-section">
+        <div class="cloakli-shortcuts-header">
+          <h2 id="cloakli-shortcuts-heading" class="cloakli-shortcuts-heading" data-i18n="shortcutsHeading">키보드 단축키</h2>
+          <button id="cloakli-shortcuts-configure-btn" class="cloakli-shortcuts-configure-btn" type="button" data-i18n="shortcutsConfigureBtn">
+            단축키 설정
+          </button>
+        </div>
+        <ul id="cloakli-shortcuts-list" class="cloakli-shortcuts-list"></ul>
+        <p id="cloakli-shortcuts-message" class="cloakli-shortcuts-message" hidden></p>
+        <!-- chrome://extensions/shortcuts를 새 탭으로 여는 데 실패했을 때만 나타나는 대체 안내 -->
+        <div id="cloakli-shortcuts-fallback" class="cloakli-shortcuts-fallback" hidden>
+          <p data-i18n="shortcutsFallbackHint">자동으로 열리지 않으면 아래 주소를 복사해 새 탭에 붙여넣으세요.</p>
+          <div class="cloakli-shortcuts-copy-row">
+            <input id="cloakli-shortcuts-url-input" class="cloakli-shortcuts-url-input" type="text" readonly value="chrome://extensions/shortcuts" aria-label="chrome://extensions/shortcuts" />
+            <button id="cloakli-shortcuts-copy-btn" class="cloakli-btn-icon" type="button" data-i18n="shortcutsCopyBtn">복사</button>
+          </div>
+          <p id="cloakli-shortcuts-copy-status" class="cloakli-shortcuts-copy-status" aria-live="polite"></p>
+        </div>
+      </section>
+
       <footer class="cloakli-footer">
         <button id="cloakli-help-btn" class="cloakli-link-btn" type="button" data-i18n="helpBtn">사용 방법 다시 보기</button>
         <button id="cloakli-pro-info-btn" class="cloakli-link-btn" type="button" data-i18n="proInfoBtn">Pro 알아보기</button>
-        <button id="cloakli-shortcuts-btn" class="cloakli-link-btn" type="button" data-i18n="shortcutsBtn">키보드 단축키</button>
       </footer>
 
       <!-- "Pro 알아보기" 기능 목록 안내 영역. CTA는 popup.js가 checkoutUrl 유무에 따라 채운다. -->
@@ -129,27 +153,6 @@
         </ul>
         <div id="cloakli-pro-info-cta" class="cloakli-pro-info-cta"></div>
         <button id="cloakli-pro-info-close-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="closeBtn">닫기</button>
-      </section>
-
-      <!-- 키보드 단축키 안내. Free/Pro 구분 없이 항상 볼 수 있다. 실제 단축키 값은
-           chrome.commands.getAll()로 팝업을 열 때마다 조회하므로(popup.js), 여기 목록
-           항목은 정적 마크업 없이 스크립트가 채운다. -->
-      <section id="cloakli-shortcuts-section" class="cloakli-shortcuts-section" hidden>
-        <h2 class="cloakli-shortcuts-heading" data-i18n="shortcutsHeading">키보드 단축키</h2>
-        <ul id="cloakli-shortcuts-list" class="cloakli-shortcuts-list"></ul>
-        <p id="cloakli-shortcuts-message" class="cloakli-shortcuts-message" hidden></p>
-        <button id="cloakli-shortcuts-configure-btn" class="cloakli-btn cloakli-btn-secondary" type="button" data-i18n="shortcutsConfigureBtn">
-          단축키 설정
-        </button>
-        <!-- chrome://extensions/shortcuts를 새 탭으로 여는 데 실패했을 때만 나타나는 대체 안내 -->
-        <div id="cloakli-shortcuts-fallback" class="cloakli-shortcuts-fallback" hidden>
-          <p data-i18n="shortcutsFallbackHint">자동으로 열리지 않으면 아래 주소를 복사해 새 탭에 붙여넣으세요.</p>
-          <div class="cloakli-shortcuts-copy-row">
-            <input id="cloakli-shortcuts-url-input" class="cloakli-shortcuts-url-input" type="text" readonly value="chrome://extensions/shortcuts" aria-label="chrome://extensions/shortcuts" />
-            <button id="cloakli-shortcuts-copy-btn" class="cloakli-btn-icon" type="button" data-i18n="shortcutsCopyBtn">복사</button>
-          </div>
-          <p id="cloakli-shortcuts-copy-status" class="cloakli-shortcuts-copy-status" aria-live="polite"></p>
-        </div>
       </section>
     </section>
 
