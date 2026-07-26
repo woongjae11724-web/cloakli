@@ -51,6 +51,26 @@ function buildProductionConfigSource(sourceConfig) {
 // manifest가 다국어 키(__MSG_extensionName__)를 쓰는 경우 manifest 자체는 건드리지 않고
 // (키를 리터럴로 바꾸면 다국어가 깨진다), 대신 buildMode()가 출력 폴더의 _locales
 // 메시지 파일에 같은 라벨을 적용한다(applyLocaleBuildLabel).
+// 개발(unpacked) 빌드 전용 고정 공개키를 manifest에 넣는다(순수 함수).
+//
+// 왜 필요한가: manifest에 "key"가 없으면 unpacked 확장의 ID는 "로드한 폴더의 절대경로"
+// 해시로 정해진다. 그래서 프로젝트 폴더를 옮기기만 해도 ID가 완전히 달라지고, Chrome은
+// 이를 전혀 다른 확장으로 취급한다 → 사용자가 지정해 둔 키보드 단축키가 전부 사라지고,
+// 라이선스 서버의 ALLOWED_EXTENSION_IDS 등록도 무효가 된다(실제로 겪은 문제).
+// 고정 키를 넣으면 폴더를 어디로 옮기든 개발 빌드 ID가 항상 같아 이 문제가 재발하지 않는다.
+//
+// production 빌드에는 절대 넣지 않는다 — Chrome Web Store가 항목 고유 ID를 직접 발급하며,
+// 업로드 패키지에 임의의 key가 들어가면 그 ID와 충돌할 수 있다.
+function applyDevExtensionKey(manifest, mode, devKey) {
+  const result = Object.assign({}, manifest);
+  if (mode === "development" && devKey) {
+    result.key = devKey;
+  } else {
+    delete result.key;
+  }
+  return result;
+}
+
 function applyManifestBuildLabel(manifest, mode) {
   const result = Object.assign({}, manifest);
   const usesI18nName = /^__MSG_.+__$/.test(String(manifest.name || ""));
@@ -157,10 +177,17 @@ function buildMode(mode, options) {
     fs.writeFileSync(path.join(distDir, "build-config.js"), buildProductionConfigSource(sourceConfig), "utf8");
   }
 
-  // manifest.json의 name/description을 빌드 모드에 맞게 다시 쓴다.
+  // manifest.json의 name/description을 빌드 모드에 맞게 다시 쓰고, 개발 빌드에만
+  // 고정 확장 키를 넣는다(폴더를 옮겨도 개발 확장 ID가 바뀌지 않도록).
   const manifestDistPath = path.join(distDir, "manifest.json");
   const manifestJson = JSON.parse(fs.readFileSync(manifestDistPath, "utf8"));
-  const labeledManifest = applyManifestBuildLabel(manifestJson, mode);
+  let devKey = null;
+  try {
+    devKey = require("./dev-extension-key.json").key || null;
+  } catch (err) {
+    devKey = null; // 키 파일이 없어도 빌드 자체는 계속 진행한다(ID가 경로 기반으로 돌아갈 뿐).
+  }
+  const labeledManifest = applyDevExtensionKey(applyManifestBuildLabel(manifestJson, mode), mode, devKey);
   fs.writeFileSync(manifestDistPath, JSON.stringify(labeledManifest, null, 2) + "\n", "utf8");
 
   // manifest가 다국어 키를 쓰면 실제 표시 이름은 _locales에서 나오므로, 출력 폴더의
@@ -204,6 +231,7 @@ module.exports = {
   buildMode,
   buildProductionConfigSource,
   applyManifestBuildLabel,
+  applyDevExtensionKey,
   applyLocaleBuildLabel,
   resolveManifestMessage,
   stripDevOnlyMarkup,

@@ -1,0 +1,5 @@
+{
+  "_comment": "개발(unpacked) 빌드 전용 고정 공개키. 이 값이 manifest에 들어가면 확장 ID가 폴더 경로와 무관하게 항상 같아져, 프로젝트를 옮겨도 단축키/라이선스 allowlist가 초기화되지 않는다. 공개키이므로 비밀값이 아니며, production 빌드에는 절대 포함되지 않는다(Chrome Web Store가 자체 ID를 발급).",
+  "extensionId": "dhfgkjohekebfnobldbbeipjobbknlce",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsK3y+h/OTGdpRZDqHiGLgyIOPBVMoCJgCtrea6kRN8IWqGOg85l4saZrujLUqAXVG53v41iC7GieMBiwgTuxfow1IQ0hq7MBlpQgxP0CZJNNyQIps+X1zbchSUydaNqwQY9M1KSf0KlZsF5RSo3YqLYw6RXW2mm/zGTMCc65KyQw4Slle6y7Pc6fcG1V+SCGZPZiNGZcz2yINdK31E+AP2S+aHkrtZ3zyR7ohqxTJkons2vDcOGdX4AC1Ktcvzm8biXX5Mig1Cv531gt8/TwTmW1DQGU6HOpf3Q2pzwI/QrDVyIGoYAdmscj5ukrl4jwBBGbutpdxPU1NOytKG5X6wIDAQAB"
+}
