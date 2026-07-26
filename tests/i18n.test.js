@@ -82,3 +82,32 @@ test("manifest 아이콘 파일이 실제로 존재한다", () => {
     assert.strictEqual(buf.readUInt32BE(0), 0x89504e47, `${icon}은 PNG여야 함`);
   }
 });
+
+// popup.html/options.html의 모든 data-i18n / data-i18n-aria / data-i18n-placeholder 키가
+// en/ko 로케일 모두에 실제로 존재하는지 정적으로 대조한다. 새 UI 텍스트를 HTML에 추가하면서
+// 로케일 파일에 키를 빠뜨리는 회귀를 잡는다(website.test.js의 같은 취지의 검사를 확장에도 적용).
+test("popup.html/options.html의 모든 data-i18n* 키가 en/ko 로케일에 존재한다", () => {
+  const en = loadLocale("en");
+  const ko = loadLocale("ko");
+  const missing = [];
+  for (const file of ["popup.html", "options.html"]) {
+    const content = fs.readFileSync(path.join(ROOT, file), "utf8");
+    for (const m of content.matchAll(/data-i18n(?:-aria|-placeholder)?=["'](\w+)["']/g)) {
+      if (!en[m[1]]) missing.push(`${file} → ${m[1]} (en 누락)`);
+      if (!ko[m[1]]) missing.push(`${file} → ${m[1]} (ko 누락)`);
+    }
+  }
+  assert.deepStrictEqual(missing, [], "로케일에 없는 data-i18n 키: " + missing.join(", "));
+});
+
+// popup.html/options.html의 <html lang>은 실제 Chrome에서 localizeDocument()가
+// chrome.i18n.getUILanguage()로 즉시 덮어쓰므로, 소스에 박힌 정적 값은 "chrome.i18n이 없는
+// 테스트/폴백 환경"에서만 의미가 있다 — 그 환경에서는 fallback 텍스트가 한국어이므로 "ko"가
+// 맞다. 실제 로케일별 렌더링(영어/한국어/미지원 언어 폴백) 검증은 i18n-locale-rendering.test.js가
+// chrome.i18n mock으로 수행한다.
+test("popup.html/options.html의 정적 lang 속성은 fallback 텍스트(한국어)와 일치하는 'ko'다", () => {
+  for (const file of ["popup.html", "options.html"]) {
+    const content = fs.readFileSync(path.join(ROOT, file), "utf8");
+    assert.match(content, /<html lang="ko">/, `${file}의 정적 lang 속성`);
+  }
+});

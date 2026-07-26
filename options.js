@@ -32,6 +32,11 @@ function msg(key, fallback, substitutions) {
 function localizeDocument() {
   try {
     if (!(typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage)) return;
+    // <html lang> 속성을 실제 브라우저 UI 언어로 맞춘다 (popup.js와 동일한 이유).
+    if (typeof chrome.i18n.getUILanguage === "function") {
+      const uiLang = chrome.i18n.getUILanguage();
+      if (uiLang) document.documentElement.lang = uiLang;
+    }
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const m = chrome.i18n.getMessage(el.getAttribute("data-i18n"));
       if (m) el.textContent = m;

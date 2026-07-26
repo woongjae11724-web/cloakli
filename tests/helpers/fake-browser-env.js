@@ -27,7 +27,8 @@ function clone(value) {
 
 // chrome.storage.local / chrome.storage.onChanged / chrome.runtime.onMessage의 최소 모의 구현.
 // 실제 chrome API처럼 콜백이 비동기(매크로태스크)로 불리도록 setTimeout(fn, 0)을 사용한다.
-function createChromeMock() {
+function createChromeMock(options) {
+  const opts = options || {};
   const storageData = {};
   const onChangedListeners = [];
   const onMessageListeners = [];
@@ -42,6 +43,9 @@ function createChromeMock() {
       },
       __listeners: onMessageListeners,
     },
+    // 실제 로케일 렌더링 검증용(tests/helpers/real-i18n-mock.js). 안 주면 기존처럼
+    // chrome.i18n이 없는 것으로 취급되어 msg()가 항상 한국어 fallback을 쓴다(기존 테스트 유지).
+    ...(opts.i18n ? { i18n: opts.i18n } : {}),
     storage: {
       local: {
         get(keys, cb) {
@@ -150,9 +154,9 @@ function dispatchOn(env, target, evt) {
   return evt;
 }
 
-function createEnv(initialUrl) {
+function createEnv(initialUrl, envOptions) {
   const sandbox = {};
-  const chromeMock = createChromeMock();
+  const chromeMock = createChromeMock(envOptions);
 
   sandbox.console = console;
   sandbox.setTimeout = setTimeout;

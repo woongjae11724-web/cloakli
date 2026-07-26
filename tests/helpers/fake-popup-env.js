@@ -84,6 +84,7 @@ function buildPopupDom(env) {
 
   const onboarding = make("section", "cloakli-onboarding", true);
   const onboardingStartBtn = make("button", "cloakli-onboarding-start-btn");
+  onboardingStartBtn.setAttribute("data-i18n", "onboardingStart");
   onboarding.appendChild(onboardingStartBtn);
 
   const main = make("section", "cloakli-main");
@@ -98,7 +99,9 @@ function buildPopupDom(env) {
   const clearBtn = make("button", "cloakli-clear-btn");
   const manageBtn = make("button", "cloakli-manage-btn");
   const helpBtn = make("button", "cloakli-help-btn");
+  helpBtn.setAttribute("data-i18n", "helpBtn");
   const proInfoBtn = make("button", "cloakli-pro-info-btn");
+  proInfoBtn.setAttribute("data-i18n", "proInfoBtn");
   const proInfoSection = make("section", "cloakli-pro-info", true);
   const proInfoCta = make("div", "cloakli-pro-info-cta");
   const proInfoCloseBtn = make("button", "cloakli-pro-info-close-btn");
@@ -116,6 +119,8 @@ function buildPopupDom(env) {
   licenseKeyInput.type = "password";
   licenseKeyInput.value = "";
   const toggleLicenseVisibilityBtn = make("button", "cloakli-toggle-license-visibility-btn");
+  toggleLicenseVisibilityBtn.setAttribute("data-i18n", "licenseVisibilityShow");
+  toggleLicenseVisibilityBtn.setAttribute("data-i18n-aria", "licenseVisibilityToggleAria");
   const activateLicenseBtn = make("button", "cloakli-activate-license-btn");
   const licenseMessage = make("p", "cloakli-license-message");
   licenseInputArea.appendChild(licenseKeyInput);
@@ -177,6 +182,10 @@ function createChromeMock(options) {
         return { version: "0.1.0" };
       },
     },
+    // 실제 로케일 렌더링 검증용: opts.i18n을 주면(tests/helpers/real-i18n-mock.js) msg()/
+    // localizeDocument()가 실제 chrome.i18n처럼 동작한다. 안 주면 기존처럼 chrome.i18n이 아예
+    // 없는 것으로 취급되어(undefined) 기존 테스트들의 "한국어 fallback" 동작이 그대로 유지된다.
+    ...(opts.i18n ? { i18n: opts.i18n } : {}),
     tabs: {
       query() {
         calls.tabsQuery++;
@@ -354,4 +363,4 @@ function createPopupEnv(options) {
   return env;
 }
 
-module.exports = { createPopupEnv, createChromeMock, buildConfigSourceFor };
+module.exports = { createPopupEnv, createChromeMock, buildConfigSourceFor, createBackgroundBridge };

@@ -36,6 +36,14 @@ function msg(key, fallback, substitutions) {
 function localizeDocument() {
   try {
     if (!(typeof chrome !== "undefined" && chrome.i18n && chrome.i18n.getMessage)) return;
+    // <html lang> 속성을 실제 브라우저 UI 언어로 맞춘다. 소스에는 lang="ko"가 정적으로
+    // 박혀 있는데(테스트/i18n 미지원 환경의 한국어 fallback 텍스트와 맞춤), 실제 Chrome에서는
+    // chrome.i18n이 항상 쓰이므로 이 값이 항상 실제 표시 언어로 갱신되어야 스크린리더 등
+    // 접근성 도구가 언어를 올바르게 인식한다.
+    if (typeof chrome.i18n.getUILanguage === "function") {
+      const uiLang = chrome.i18n.getUILanguage();
+      if (uiLang) document.documentElement.lang = uiLang;
+    }
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       const m = chrome.i18n.getMessage(el.getAttribute("data-i18n"));
       if (m) el.textContent = m;
