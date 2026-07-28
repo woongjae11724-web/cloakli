@@ -27,8 +27,17 @@ async function routeRequest(request, env) {
   if (url.pathname === "/v1/license/deactivate" && request.method === "POST") {
     return handleDeactivate(request, env);
   }
+  // 기존 Test mode 웹훅 경로 - Lemon Squeezy Test mode 웹훅 등록을 그대로 유지한다
+  // (URL도 secret도 바꾸지 않아, 이미 동작 중인 Test mode 검증에 영향이 없다).
   if (url.pathname === "/v1/webhooks/lemonsqueezy" && request.method === "POST") {
-    return handleWebhook(request, env);
+    return handleWebhook(request, env, env.LEMONSQUEEZY_WEBHOOK_SECRET);
+  }
+  // Live mode 전용 경로 - Lemon Squeezy Live mode 웹훅은 이 URL로 별도 등록하고,
+  // 별도의 Signing secret(LEMONSQUEEZY_WEBHOOK_SECRET_LIVE)으로만 검증한다.
+  // 같은 Worker/D1을 공유하되 경로와 secret이 분리되어 있어 한쪽 secret이 유출/교체돼도
+  // 다른 쪽 검증에 영향이 없다.
+  if (url.pathname === "/v1/webhooks/lemonsqueezy/live" && request.method === "POST") {
+    return handleWebhook(request, env, env.LEMONSQUEEZY_WEBHOOK_SECRET_LIVE);
   }
   if (url.pathname === "/v1/admin/license-summary" && request.method === "GET") {
     return handleAdminSummary(request, env);
@@ -40,7 +49,12 @@ async function routeRequest(request, env) {
 // 웹훅과 관리자 집계는 서버 간 호출이라 Origin 헤더가 없고(production에서 Origin 없는
 // 요청은 CORS가 거부하므로 면제하지 않으면 웹훅이 전부 403이 된다), 각자 자체 인증
 // (웹훅: HMAC 서명 / 관리자: bearer secret)이 실제 방어선이다.
-const CORS_EXEMPT_PATHS = ["/health", "/v1/webhooks/lemonsqueezy", "/v1/admin/license-summary"];
+const CORS_EXEMPT_PATHS = [
+  "/health",
+  "/v1/webhooks/lemonsqueezy",
+  "/v1/webhooks/lemonsqueezy/live",
+  "/v1/admin/license-summary",
+];
 
 function isCorsExemptPath(pathname) {
   return CORS_EXEMPT_PATHS.indexOf(pathname) !== -1;

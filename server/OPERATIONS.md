@@ -44,10 +44,16 @@ npx.cmd wrangler d1 execute cloakli-license-db --remote --command "SELECT name F
 ## 3. secret 교체 (유출 의심/정기 교체)
 
 ### webhook secret
-1. Lemon Squeezy → Settings → Webhooks → 해당 웹훅의 Signing secret을 새 무작위 값으로 변경
-2. 즉시 `npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET`에 같은 값 입력
-3. 두 값이 갈리는 짧은 시간 동안 웹훅이 401로 거부될 수 있음 — Lemon Squeezy는 실패한
-   웹훅을 재시도하므로 교체 후 웹훅 목록에서 실패 건 재전송(Resend)으로 복구
+Test mode 웹훅(`/v1/webhooks/lemonsqueezy`, secret: `LEMONSQUEEZY_WEBHOOK_SECRET`)과
+Live mode 웹훅(`/v1/webhooks/lemonsqueezy/live`, secret: `LEMONSQUEEZY_WEBHOOK_SECRET_LIVE`)은
+경로와 secret이 서로 분리되어 있다. 아래 절차는 둘 중 교체가 필요한 쪽에만 적용하고,
+반대쪽은 건드리지 않는다.
+
+1. Lemon Squeezy → Settings → Webhooks → 해당 mode의 웹훅의 Signing secret을 새 무작위 값으로 변경
+2. 즉시 `npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET`(Test mode) 또는
+   `npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET_LIVE`(Live mode)에 같은 값 입력
+3. 두 값이 갈리는 짧은 시간 동안 해당 mode의 웹훅이 401로 거부될 수 있음 — Lemon Squeezy는
+   실패한 웹훅을 재시도하므로 교체 후 웹훅 목록에서 실패 건 재전송(Resend)으로 복구
 
 ### 관리자 secret
 ```bat
@@ -106,7 +112,8 @@ curl -H "Authorization: Bearer <CLOAKLI_ADMIN_SECRET>" https://<worker-도메인
 
 | 이름 | 종류 | 위치 | 비고 |
 |---|---|---|---|
-| LEMONSQUEEZY_WEBHOOK_SECRET | secret | wrangler secret | Lemon Squeezy 웹훅 Signing secret과 동일 값 |
+| LEMONSQUEEZY_WEBHOOK_SECRET | secret | wrangler secret | Test mode 웹훅(/v1/webhooks/lemonsqueezy)의 Signing secret과 동일 값 |
+| LEMONSQUEEZY_WEBHOOK_SECRET_LIVE | secret | wrangler secret | Live mode 웹훅(/v1/webhooks/lemonsqueezy/live) 전용 Signing secret과 동일 값. Test용과 별개 |
 | CLOAKLI_ADMIN_SECRET | secret | wrangler secret | 집계 조회 전용, 다른 곳에 재사용 금지 |
 | ENVIRONMENT | var | wrangler.toml | production 블록에서 "production" |
 | LICENSE_PROVIDER | var | wrangler.toml | production에서 반드시 "lemonsqueezy" (mock이면 서버가 요청 시 즉시 에러) |

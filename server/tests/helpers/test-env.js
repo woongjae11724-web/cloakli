@@ -4,6 +4,7 @@ import { createMemoryRepository } from "./memory-repository.js";
 export const TEST_EXTENSION_ID = "abcdefghijklmnopabcdefghijklmnop"; // 32자, a-p 범위
 export const TEST_ORIGIN = "chrome-extension://" + TEST_EXTENSION_ID;
 export const TEST_WEBHOOK_SECRET = "test-webhook-secret";
+export const TEST_LIVE_WEBHOOK_SECRET = "test-live-webhook-secret";
 export const TEST_ADMIN_SECRET = "test-admin-secret-value";
 
 export function createTestEnv(overrides) {
@@ -14,6 +15,7 @@ export function createTestEnv(overrides) {
       LICENSE_PROVIDER: "mock",
       ALLOWED_EXTENSION_IDS: TEST_EXTENSION_ID,
       LEMONSQUEEZY_WEBHOOK_SECRET: TEST_WEBHOOK_SECRET,
+      LEMONSQUEEZY_WEBHOOK_SECRET_LIVE: TEST_LIVE_WEBHOOK_SECRET,
       LEMONSQUEEZY_PRODUCT_ID: "",
       LEMONSQUEEZY_VARIANT_ID: "",
       CLOAKLI_ADMIN_SECRET: TEST_ADMIN_SECRET,

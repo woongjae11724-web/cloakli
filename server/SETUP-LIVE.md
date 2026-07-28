@@ -37,8 +37,13 @@ npx.cmd wrangler deploy
 `CLOAKLI_SESSION_TOKEN_SECRET`은 세션 토큰이 무작위+해시 방식이라 불필요 — 등록하지 마세요.)
 
 ```bat
-:: B단계에서 복사한 webhook Signing secret 입력
+:: 기존 Test mode 웹훅(/v1/webhooks/lemonsqueezy)용 - 이미 등록되어 있다면 재입력 불필요
 npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET
+
+:: Live mode 웹훅(/v1/webhooks/lemonsqueezy/live) 전용 - B3에서 새로 등록할 Live 웹훅의
+:: Signing secret을 여기 입력. 경로와 secret이 Test와 분리되어 있어 이 값을 새로
+:: 등록/교체해도 기존 Test 웹훅 검증에는 영향이 없다.
+npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET_LIVE
 
 :: 관리자 집계 조회용 무작위 긴 문자열 입력 (직접 생성, 재사용 금지)
 npx.cmd wrangler secret put CLOAKLI_ADMIN_SECRET
@@ -82,10 +87,18 @@ ALLOWED_EXTENSION_IDS = "<개발용 ID>,<Web Store 출시 후 발급될 ID>"
       이 키는 확인 용도로만 쓰고 서버에는 등록하지 않음)
 
 ### B3. Webhook
+Test mode 웹훅과 Live mode 웹훅은 Lemon Squeezy에서 별개로 등록해야 하며, 서버도 경로/secret을
+분리해 두었다 - Test mode 웹훅은 기존 그대로 두고, Live mode 웹훅만 아래처럼 **새로** 등록한다.
+
+**Test mode 웹훅(이미 등록되어 있다면 그대로 둔다):**
+- Callback URL: `https://<배포된 Worker 도메인>/v1/webhooks/lemonsqueezy`
+- Signing secret → `LEMONSQUEEZY_WEBHOOK_SECRET`
+
+**Live mode 웹훅(신규 등록, 대시보드를 Live mode로 전환한 상태에서):**
 - [ ] **Settings → Webhooks → “+”** 클릭
-- [ ] Callback URL: `https://<배포된 Worker 도메인>/v1/webhooks/lemonsqueezy`
+- [ ] Callback URL: `https://<배포된 Worker 도메인>/v1/webhooks/lemonsqueezy/live` (Test와 경로가 다름)
 - [ ] **Signing secret**: 무작위 긴 문자열 입력(직접 생성) — 복사해 두었다가
-      `npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET`에 그대로 입력 (두 곳 값이 동일해야 함)
+      `npx.cmd wrangler secret put LEMONSQUEEZY_WEBHOOK_SECRET_LIVE`에 그대로 입력 (두 곳 값이 동일해야 함)
 - [ ] 이벤트 선택(서버 handler와 일치, 현재 구현 기준):
   - `order_created`
   - `subscription_created`
@@ -109,8 +122,11 @@ ALLOWED_EXTENSION_IDS = "<개발용 ID>,<Web Store 출시 후 발급될 ID>"
 - [ ] Cloakli DEV 팝업에 키 입력 → `Pro 활성화` → "License Pro" 표시 확인
 
 ### B5. Live 전환 시
-- [ ] Test mode를 끄고 live 상품/웹훅/checkout URL을 다시 확인
-- [ ] live 웹훅의 Signing secret이 Cloudflare secret과 일치하는지 재확인
+- [ ] Test mode를 끄고 live 상품/checkout URL을 확인
+- [ ] Live 웹훅은 B3에서 `/v1/webhooks/lemonsqueezy/live` 경로로 이미 별도 등록되어 있어야 함
+      (기존 Test 웹훅과 경로가 다르므로 헷갈리지 않도록 주의)
+- [ ] Live 웹훅의 Signing secret이 `LEMONSQUEEZY_WEBHOOK_SECRET_LIVE` Cloudflare secret과 일치하는지 재확인
+      (`LEMONSQUEEZY_WEBHOOK_SECRET`는 Test 전용이므로 여기 넣지 않는다)
 
 ---
 

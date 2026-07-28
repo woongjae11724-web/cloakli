@@ -90,10 +90,13 @@ async function applySubscriptionEvent(repo, payload) {
   return { applied: true };
 }
 
-export async function handleWebhook(request, env) {
+// secret: 이 요청을 검증할 서명 secret. Test mode와 Live mode 웹훅은 Lemon Squeezy에서
+// 별개로 등록되고 서로 다른 Signing secret을 가지므로, 어느 secret으로 검증할지는
+// 호출부(index.js)가 요청 경로(Test용 고정 경로 vs Live 전용 경로)를 보고 결정해
+// 넘겨준다 - 이 함수 자체는 Test/Live를 구분하지 않고 주어진 secret 하나로만 검증한다.
+export async function handleWebhook(request, env, secret) {
   const rawBody = await request.text();
   const signature = request.headers.get("X-Signature");
-  const secret = env.LEMONSQUEEZY_WEBHOOK_SECRET;
 
   if (!secret) return jsonResponse({ ok: false, error: "webhook_not_configured" }, 500);
   if (!signature) return jsonResponse({ ok: false, error: "missing_signature" }, 401);

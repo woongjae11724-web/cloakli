@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import worker from "../src/index.js";
-import { createTestEnv, makeRequest, TEST_WEBHOOK_SECRET } from "./helpers/test-env.js";
+import { createTestEnv, makeRequest, TEST_WEBHOOK_SECRET, TEST_LIVE_WEBHOOK_SECRET } from "./helpers/test-env.js";
 import { hmacSha256Hex, sha256Hex } from "../src/utils/hash.js";
 
 function licenseKeyPayload(eventName, overrides) {
@@ -170,6 +170,65 @@ describe("POST /v1/webhooks/lemonsqueezy", () => {
     const text = await res.text();
     assert.ok(!text.includes("SUPER-SECRET-KEY-TEXT"));
     assert.ok(!text.includes(TEST_WEBHOOK_SECRET));
+  });
+});
+
+// Test mode 웹훅(/v1/webhooks/lemonsqueezy)과 Live mode 웹훅(/v1/webhooks/lemonsqueezy/live)은
+// 경로도 secret도 서로 분리되어 있어야 한다 - 한쪽 secret이 유출되거나 나중에 교체되어도
+// 다른 쪽 검증에 영향이 없어야 하고, Live 값이 아직 설정되지 않은 상태에서도 기존 Test
+// 경로는 그대로 동작해야 한다(Live 전환 준비가 Test를 깨뜨리면 안 된다).
+describe("POST /v1/webhooks/lemonsqueezy/live (Test/Live 경로 분리)", () => {
+  test("Live 경로는 Live secret으로 서명한 요청을 200으로 처리한다", async () => {
+    const env = createTestEnv();
+    const payload = licenseKeyPayload("license_key_created", { key: "LIVE-LICENSE-KEY" });
+    const res = await worker.fetch(await signedRequest("/v1/webhooks/lemonsqueezy/live", payload, TEST_LIVE_WEBHOOK_SECRET), env);
+    assert.equal(res.status, 200);
+
+    const keyHash = await sha256Hex("LIVE-LICENSE-KEY");
+    const license = await env.__testRepo.findLicenseByKeyHash(keyHash);
+    assert.ok(license, "Live 웹훅으로도 라이선스가 저장되어야 한다");
+  });
+
+  test("Live 경로는 Test secret으로 서명한 요청을 거부한다(401)", async () => {
+    const env = createTestEnv();
+    const payload = licenseKeyPayload("license_key_created", { key: "LIVE-LICENSE-KEY" });
+    const res = await worker.fetch(await signedRequest("/v1/webhooks/lemonsqueezy/live", payload, TEST_WEBHOOK_SECRET), env);
+    assert.equal(res.status, 401);
+  });
+
+  test("기존 Test 경로는 Live secret으로 서명한 요청을 거부한다(401) - 경로가 뒤섞이지 않는다", async () => {
+    const env = createTestEnv();
+    const payload = licenseKeyPayload("license_key_created", { key: "LIVE-LICENSE-KEY" });
+    const res = await worker.fetch(await signedRequest("/v1/webhooks/lemonsqueezy", payload, TEST_LIVE_WEBHOOK_SECRET), env);
+    assert.equal(res.status, 401);
+  });
+
+  test("Live secret이 아직 설정되지 않아도(빈 문자열) 기존 Test 경로는 영향받지 않는다", async () => {
+    const env = createTestEnv({ LEMONSQUEEZY_WEBHOOK_SECRET_LIVE: "" });
+    const payload = licenseKeyPayload("license_key_created", { key: "STILL-WORKS-KEY" });
+    const res = await worker.fetch(await signedRequest("/v1/webhooks/lemonsqueezy", payload, TEST_WEBHOOK_SECRET), env);
+    assert.equal(res.status, 200);
+  });
+
+  test("Live secret이 설정되어 있지 않으면 Live 경로는 500(오조작 방지)을 반환한다", async () => {
+    const env = createTestEnv({ LEMONSQUEEZY_WEBHOOK_SECRET_LIVE: "" });
+    const payload = licenseKeyPayload("license_key_created");
+    const res = await worker.fetch(await signedRequest("/v1/webhooks/lemonsqueezy/live", payload, "anything"), env);
+    assert.equal(res.status, 500);
+    const body = await res.json();
+    assert.equal(body.error, "webhook_not_configured");
+  });
+
+  test("Live 경로도 production에서 CORS 면제 대상이다(Origin 없는 서버 간 호출)", async () => {
+    const env = createTestEnv({ ENVIRONMENT: "production", LICENSE_PROVIDER: "lemonsqueezy" });
+    const payload = licenseKeyPayload("license_key_created", { key: "LIVE-PROD-KEY" });
+    const rawBody = JSON.stringify(payload);
+    const signature = await hmacSha256Hex(TEST_LIVE_WEBHOOK_SECRET, rawBody);
+    const res = await worker.fetch(
+      makeRequest("/v1/webhooks/lemonsqueezy/live", { method: "POST", body: rawBody, headers: { "X-Signature": signature }, origin: null }),
+      env
+    );
+    assert.equal(res.status, 200);
   });
 });
 
