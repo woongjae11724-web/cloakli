@@ -32,9 +32,14 @@
     // 로컬 서버로 테스트하려면 임시로 "http://127.0.0.1:8787"로 바꾸면 된다(출시 빌드
     // 검사가 localhost를 차단하므로 되돌리지 않으면 ZIP 생성이 실패한다).
     licenseServerUrl: "https://cloakli-license.mycloakli.workers.dev",
-    // Lemon Squeezy Checkout URL (실제 Cloakli Pro 상품). 비밀값이 아니며(결제 페이지
-    // 공개 주소일 뿐), popup의 "Pro 구매하기"가 이 주소를 새 탭으로 연다.
-    checkoutUrl: "https://mycloakli.lemonsqueezy.com/checkout/buy/cfc2a207-b317-443f-addc-6a85a91d533e",
+    // Lemon Squeezy Checkout URL (실제 Cloakli Pro 상품, Live mode). 비밀값이 아니며(결제
+    // 페이지 공개 주소일 뿐), popup의 "Pro 구매하기"가 이 주소를 새 탭으로 연다.
+    // website/site-config.js의 checkoutUrl과 반드시 같은 값을 유지해야 한다.
+    // 개발 빌드(dist/development)도 이 값을 그대로 복사하므로(licenseServerUrl과 동일한
+    // 기존 방식), Lemon Squeezy Test mode 결제 흐름을 로컬에서 확인하려면 이 줄만
+    // 임시로 Test checkout URL로 바꿔 테스트한 뒤 커밋 전에 반드시 이 Live 값으로
+    // 되돌린다(licenseServerUrl을 127.0.0.1로 임시 변경하는 것과 같은 패턴).
+    checkoutUrl: "https://mycloakli.lemonsqueezy.com/checkout/buy/3ddd7357-7241-4a5f-8d31-692b670591c3",
   };
 
   if (typeof module !== "undefined" && module.exports) {

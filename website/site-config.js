@@ -5,8 +5,9 @@ window.CLOAKLI_SITE = {
   // 2026-07-17 Chrome Web Store 심사 통과 후 실제 상세 페이지 URL로 교체 완료.
   chromeStoreUrl: "https://chromewebstore.google.com/detail/cloakli/acclgmjcmnkibafjjkmphmfpbfbcedaf",
 
-  // Lemon Squeezy 결제 페이지 (비밀 아님 — 공개 checkout 주소)
-  checkoutUrl: "https://mycloakli.lemonsqueezy.com/checkout/buy/cfc2a207-b317-443f-addc-6a85a91d533e",
+  // Lemon Squeezy 결제 페이지 (비밀 아님 — 공개 checkout 주소). Live mode 전환(2026-07-28)
+  // 완료 - build-config.js의 checkoutUrl과 반드시 같은 값을 유지해야 한다.
+  checkoutUrl: "https://mycloakli.lemonsqueezy.com/checkout/buy/3ddd7357-7241-4a5f-8d31-692b670591c3",
 
   // 지원/개인정보 문의 이메일
   supportEmail: "cloakli.support@gmail.com",
